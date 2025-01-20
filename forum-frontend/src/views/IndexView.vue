@@ -1,25 +1,37 @@
 <script setup>
-import {get} from "@/net";
-import {ref} from "vue";
+import {get, logout} from "@/net";
+import {reactive, ref} from "vue";
 import {useStore} from "@/store";
 import {
+  Back,
   Bell,
   ChatDotSquare, DataLine,
   Document, Files,
-  Location, Lock, Monitor, Notebook,
+  Location, Lock, Message, Monitor, Notebook,
   Notification, Operation,
   Position,
-  School,
+  School, Search,
   Umbrella, User
 } from "@element-plus/icons-vue";
+import router from "@/router";
 
 const store = useStore()
 const loading = ref(true)
+
+const searchInput = reactive({
+  type: '1',
+  text: ''
+})
 
 get('/api/user/info', (res) => {
   store.user = res
   loading.value = false
 })
+
+function userLogout(){
+  logout(()=>router.push("/"))
+}
+
 </script>
 
 <template>
@@ -27,12 +39,51 @@ get('/api/user/info', (res) => {
     <el-container style="height: 100%" v-if="!loading">
       <el-header class="main-container-header">
         <el-image class="logo" src="https://element-plus.org/images/element-plus-logo.svg"/>
-        <div style="flex: 1" class="user-info">
+        <div class="search-container">
+          <el-input class="search-input" v-model="searchInput.text" placeholder="搜索论坛相关内容...">
+            <template #prefix>
+              <el-icon>
+                <Search/>
+              </el-icon>
+            </template>
+            <template #append>
+              <el-select style="width: 110px" v-model="searchInput.type" placeholder="选择">
+                <el-option value="1" label="帖子广场"/>
+                <el-option value="2" label="失物招领"/>
+                <el-option value="3" label="校园活动"/>
+                <el-option value="4" label="表白墙"/>
+              </el-select>
+            </template>
+          </el-input>
+        </div>
+        <div class="user-info">
           <div class="profile">
             <div>{{ store.user.username }}</div>
             <div>{{ store.user.email }}</div>
           </div>
-          <el-avatar src="https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png"/>
+          <el-dropdown>
+            <el-avatar src="https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png"/>
+            <template #dropdown>
+              <el-dropdown-item>
+                <el-icon>
+                  <Operation/>
+                </el-icon>
+                <span>个人设置</span>
+              </el-dropdown-item>
+              <el-dropdown-item>
+                <el-icon>
+                  <Message/>
+                </el-icon>
+                <span>消息列表</span>
+              </el-dropdown-item>
+              <el-dropdown-item @click="userLogout" divided>
+                <el-icon>
+                  <Back/>
+                </el-icon>
+                <span>退出登录</span>
+              </el-dropdown-item>
+            </template>
+          </el-dropdown>
         </div>
       </el-header>
       <el-container>
@@ -138,12 +189,12 @@ get('/api/user/info', (res) => {
                 </el-menu-item>
               </el-sub-menu>
               <el-sub-menu index="3">
-              <template #title>
-                <el-icon>
-                  <Operation/>
-                </el-icon>
-                <span><b>个人中心</b></span>
-              </template>
+                <template #title>
+                  <el-icon>
+                    <Operation/>
+                  </el-icon>
+                  <span><b>个人中心</b></span>
+                </template>
                 <el-menu-item>
                   <template #title>
                     <el-icon>
@@ -160,7 +211,8 @@ get('/api/user/info', (res) => {
                     <span>账户安全设置</span>
                   </template>
                 </el-menu-item>
-              </el-sub-menu>>
+              </el-sub-menu>
+              >
             </el-menu>
           </el-scrollbar>
         </el-aside>
@@ -182,6 +234,18 @@ get('/api/user/info', (res) => {
     display: flex;
     align-items: center;
     box-sizing: border-box;
+
+    .search-container {
+      flex: 1;
+      padding: 0 20px;
+      text-align: center;
+    }
+
+    .search-input {
+      width: 100%;
+      max-width: 500px;
+
+    }
   }
 
   .logo {
@@ -192,6 +256,10 @@ get('/api/user/info', (res) => {
     display: flex;
     justify-content: flex-end;
     align-items: center;
+
+    .el-avatar:hover {
+      cursor: pointer;
+    }
 
     .profile {
       text-align: right;
@@ -212,3 +280,5 @@ get('/api/user/info', (res) => {
   }
 }
 </style>
+}
+flex:1;

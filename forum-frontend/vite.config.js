@@ -17,6 +17,11 @@ export default defineConfig({
       resolvers: [ElementPlusResolver()],
     }),
   ],
+  define: {
+    // enable hydration mismatch details in production build
+    __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: 'true'
+  },
+
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))

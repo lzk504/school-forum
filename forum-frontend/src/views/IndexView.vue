@@ -28,14 +28,14 @@ get('/api/user/info', (res) => {
   loading.value = false
 })
 
-function userLogout(){
-  logout(()=>router.push("/"))
+function userLogout() {
+  logout(() => router.push("/"))
 }
 
 </script>
 
 <template>
-  <div class="main-container" v-loading="loading" element-loading-text="正在进入，请稍后...">
+  <div class="main-content" v-loading="loading" element-loading-text="正在进入，请稍后...">
     <el-container style="height: 100%" v-if="!loading">
       <el-header class="main-container-header">
         <el-image class="logo" src="https://element-plus.org/images/element-plus-logo.svg"/>
@@ -87,10 +87,12 @@ function userLogout(){
         </div>
       </el-header>
       <el-container>
-        <el-aside width="230px">
+        <el-aside width="220px">
           <el-scrollbar style="min-height: calc(100vh - 55px)">
-            <el-menu style="min-height: calc(100vh - 55px)"
-                     default-active="1-1">
+            <el-menu
+                router
+                :default-active="$route.path"
+                style="min-height: calc(100vh - 55px)">
               <el-sub-menu index="1">
                 <template #title>
                   <el-icon>
@@ -195,7 +197,7 @@ function userLogout(){
                   </el-icon>
                   <span><b>个人中心</b></span>
                 </template>
-                <el-menu-item>
+                <el-menu-item index="/index/user-setting">
                   <template #title>
                     <el-icon>
                       <User/>
@@ -212,11 +214,18 @@ function userLogout(){
                   </template>
                 </el-menu-item>
               </el-sub-menu>
-              >
             </el-menu>
           </el-scrollbar>
         </el-aside>
-        <el-main>Main</el-main>
+        <el-main class="main-content-page">
+          <el-scrollbar style="height: calc(100vh - 55px)">
+            <router-view v-slot="{ Component }">
+              <transition name="el-fade-in-linear" mode="out-in">
+                <component :is="Component" style="height: 100%"/>
+              </transition>
+            </router-view>
+          </el-scrollbar>
+        </el-main>
       </el-container>
     </el-container>
   </div>
@@ -224,12 +233,22 @@ function userLogout(){
 
 <style lang="less" scoped>
 
-.main-container {
+.main-content-page {
+  padding: 0;
+  background-color: #f7f8fa;
+}
+
+.dark .main-content-page {
+  background-color: #212225;
+}
+
+
+.main-content {
   height: 100vh;
   width: 100vw;
 
   .main-container-header {
-    border-bottom: 1px solid var(--el-border-color);
+    border-bottom: solid 1px var(--el-border-color);
     height: 55px;
     display: flex;
     align-items: center;
@@ -261,6 +280,7 @@ function userLogout(){
       cursor: pointer;
     }
 
+
     .profile {
       text-align: right;
       margin-right: 20px;
@@ -273,12 +293,10 @@ function userLogout(){
 
       :last-child {
         font-size: 10px;
-        color: gray;
+        color: grey;
       }
     }
-
   }
 }
 </style>
-}
-flex:1;
+

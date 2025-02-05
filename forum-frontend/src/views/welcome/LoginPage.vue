@@ -7,7 +7,7 @@
     <div style="margin-top: 50px">
       <el-form :model="form" :rules="rules" ref="formRef">
         <el-form-item prop="username">
-          <el-input v-model="form.username" maxlength="10" type="text" placeholder="用户名/邮箱">
+          <el-input v-model="form.username" maxlength="30" type="text" placeholder="用户名/邮箱">
             <template #prefix>
               <el-icon>
                 <User/>
@@ -37,7 +37,7 @@
       </el-form>
     </div>
     <div style="margin-top: 40px">
-      <el-button @click="userLogin()" style="width: 270px" type="success" plain>立即登录</el-button>
+      <el-button @click="userLogin" style="width: 270px" type="success" plain>立即登录</el-button>
     </div>
     <el-divider>
       <span style="color: grey;font-size: 13px">没有账号</span>

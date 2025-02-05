@@ -71,9 +71,48 @@ get('/api/user/details', data => {
   baseForm.phone = data.phone
   baseForm.qq = data.qq
   baseForm.wx = data.wx
-  baseForm.desc = desc.value= data.desc
+  baseForm.desc = desc.value = data.desc
+  emailForm.email = store.user.email
   loading.form = false
 })
+
+const coldTime = ref(0)
+const isEmailValid = ref(true)
+const onValidate = (prop, isValid) => {
+  if (prop === 'email') {
+    isEmailValid.value = isValid
+  }
+}
+
+// 修改邮箱验证码
+function sendEmailCode() {
+  emailFormRef.value.validate(isValid => {
+    coldTime.value = 60
+    get(`/api/auth/ask-code?email=${emailForm.email}&type=modify`, () => {
+      ElMessage.success(`验证码已发送到,${emailForm.email},请注意查收`)
+      const handle = setInterval(() => {
+        coldTime.value--
+        if (coldTime.value === 0) clearInterval(handle)
+      }, 1000)
+    }, (message) => {
+      ElMessage.error(message)
+      coldTime.value = 0
+    })
+  })
+}
+
+// 修改邮箱
+function modifyEmail() {
+  emailFormRef.value.validate(isValid => {
+    post('/api/user/modify', emailForm, () => {
+      ElMessage.success('邮箱更新成功')
+      store.user.email = emailForm.email
+      emailForm.code = ''
+    }, (message) => {
+      ElMessage.error(message)
+    })
+  })
+}
 
 // 表单验证规则
 const rules = {
@@ -146,12 +185,15 @@ const rules = {
                 <el-input placeholder="请输入验证码" v-model="emailForm.code"></el-input>
               </el-col>
               <el-col :span="6">
-                <el-button :icon="Select" type="success" style="width: 100%" plain>获取验证码</el-button>
+                <el-button :icon="Select" type="success" @click="sendEmailCode"
+                           :disabled="!isEmailValid || coldTime > 0"
+                           style="width: 100%" plain> {{ coldTime > 0 ? '请稍后 ' + coldTime + ' 秒' : '获取验证码' }}
+                </el-button>
               </el-col>
             </el-row>
           </el-form-item>
           <div>
-            <el-button type="success">更新电子邮件</el-button>
+            <el-button type="success" @click="modifyEmail">更新电子邮件</el-button>
           </div>
         </el-form>
       </Card>

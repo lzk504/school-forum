@@ -5,6 +5,7 @@ import com.example.entity.RestBean;
 import com.example.entity.dto.Account;
 import com.example.entity.dto.AccountDetails;
 import com.example.entity.vo.request.DetailsSaveVO;
+import com.example.entity.vo.request.ModifyEmailVO;
 import com.example.entity.vo.response.AccountDetailsVO;
 import com.example.entity.vo.response.AccountVo;
 import com.example.service.AccountDetailsService;
@@ -60,5 +61,18 @@ public class AccountController {
                                       @RequestBody DetailsSaveVO vo) {
         boolean result = detailsService.saveAccountDetails(id, vo);
         return result ? RestBean.success() : RestBean.failure(400, "此用户名已经被其他用户使用！");
+    }
+
+    /**
+     * 修改用户邮箱
+     *
+     * @param id 用户ID，通过@RequestAttribute注解从请求头中获取
+     * @param vo 包含修改邮箱所需信息的对象，通过@RequestBody注解从请求体中获取
+     * @return 修改结果，成功返回RestBean.success()，失败返回RestBean.failure(400, result)，其中result为错误信息
+     */
+    @PostMapping("/modify")
+    public RestBean<Void> modifyEmail(@RequestAttribute(Const.ATTR_USER_ID) int id, @RequestBody ModifyEmailVO vo) {
+        String result = accountService.ModifyEmail(id, vo);
+        return result == null ? RestBean.success() : RestBean.failure(400, result);
     }
 }

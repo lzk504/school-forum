@@ -2,10 +2,7 @@ package com.example.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.example.entity.dto.Account;
-import com.example.entity.vo.request.ConfirmResetVO;
-import com.example.entity.vo.request.EmailRegisterVO;
-import com.example.entity.vo.request.EmailResetVO;
-import com.example.entity.vo.request.ModifyEmailVO;
+import com.example.entity.vo.request.*;
 import org.springframework.security.core.userdetails.UserDetailsService;
 
 public interface AccountService extends IService<Account>, UserDetailsService {
@@ -28,4 +25,10 @@ public interface AccountService extends IService<Account>, UserDetailsService {
      * 修改用户邮箱
      */
     String ModifyEmail(int id, ModifyEmailVO vo);
+
+
+    /**
+     * 修改密码
+     */
+    String changePassword(int id, ChangePasswordVO vo);
 }

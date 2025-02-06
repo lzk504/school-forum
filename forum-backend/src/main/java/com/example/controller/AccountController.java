@@ -4,6 +4,7 @@ package com.example.controller;
 import com.example.entity.RestBean;
 import com.example.entity.dto.Account;
 import com.example.entity.dto.AccountDetails;
+import com.example.entity.vo.request.ChangePasswordVO;
 import com.example.entity.vo.request.DetailsSaveVO;
 import com.example.entity.vo.request.ModifyEmailVO;
 import com.example.entity.vo.response.AccountDetailsVO;
@@ -12,6 +13,7 @@ import com.example.service.AccountDetailsService;
 import com.example.service.AccountService;
 import com.example.utils.Const;
 import jakarta.annotation.Resource;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
@@ -74,5 +76,18 @@ public class AccountController {
     public RestBean<Void> modifyEmail(@RequestAttribute(Const.ATTR_USER_ID) int id, @RequestBody ModifyEmailVO vo) {
         String result = accountService.ModifyEmail(id, vo);
         return result == null ? RestBean.success() : RestBean.failure(400, result);
+    }
+
+    /**
+     * 修改用户密码
+     *
+     * @param id 用户ID，通过@RequestAttribute注解从请求中获取
+     * @param vo 包含新密码和旧密码的VO对象，通过@RequestBody注解从请求体中获取
+     * @return 如果密码修改成功，返回状态码为200的RestBean对象，表示操作成功；如果密码修改失败，返回状态码为400的RestBean对象，并附带错误信息
+     */
+    @PostMapping("/change-password")
+    public RestBean<Void> changePassword(@RequestAttribute(Const.ATTR_USER_ID) int id,
+                                         @RequestBody @Valid ChangePasswordVO vo){
+        return RestBean.messageHandle(() -> accountService.changePassword(id, vo));
     }
 }

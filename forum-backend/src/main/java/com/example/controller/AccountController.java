@@ -7,9 +7,12 @@ import com.example.entity.dto.AccountDetails;
 import com.example.entity.vo.request.ChangePasswordVO;
 import com.example.entity.vo.request.DetailsSaveVO;
 import com.example.entity.vo.request.ModifyEmailVO;
+import com.example.entity.vo.request.PrivacySaveVO;
 import com.example.entity.vo.response.AccountDetailsVO;
+import com.example.entity.vo.response.AccountPrivacyVO;
 import com.example.entity.vo.response.AccountVo;
 import com.example.service.AccountDetailsService;
+import com.example.service.AccountPrivacyService;
 import com.example.service.AccountService;
 import com.example.utils.Const;
 import jakarta.annotation.Resource;
@@ -27,6 +30,9 @@ public class AccountController {
 
     @Resource
     private AccountDetailsService detailsService;
+
+    @Resource
+    private AccountPrivacyService privacyService;
 
     /**
      * 获取账户信息
@@ -74,8 +80,7 @@ public class AccountController {
      */
     @PostMapping("/modify")
     public RestBean<Void> modifyEmail(@RequestAttribute(Const.ATTR_USER_ID) int id, @RequestBody ModifyEmailVO vo) {
-        String result = accountService.ModifyEmail(id, vo);
-        return result == null ? RestBean.success() : RestBean.failure(400, result);
+        return RestBean.messageHandle(() -> accountService.ModifyEmail(id, vo));
     }
 
     /**
@@ -87,7 +92,31 @@ public class AccountController {
      */
     @PostMapping("/change-password")
     public RestBean<Void> changePassword(@RequestAttribute(Const.ATTR_USER_ID) int id,
-                                         @RequestBody @Valid ChangePasswordVO vo){
+                                         @RequestBody @Valid ChangePasswordVO vo) {
         return RestBean.messageHandle(() -> accountService.changePassword(id, vo));
+    }
+
+    /**
+     * 保存隐私信息
+     *
+     * @param id 用户ID，从请求属性中获取
+     * @param vo 隐私信息保存对象，通过请求体接收
+     * @return RestBean对象，包含操作结果和消息
+     */
+    @PostMapping("/save-privacy")
+    public RestBean<Void> savePrivacy(@RequestAttribute(Const.ATTR_USER_ID) int id,
+                                      @RequestBody @Valid PrivacySaveVO vo) {
+        return RestBean.messageHandle(() -> privacyService.savePrivacy(id, vo));
+    }
+
+    /**
+     * 获取用户的隐私设置
+     *
+     * @param id 用户ID，从请求属性中获取
+     * @return RestBean对象，包含操作结果和用户隐私设置信息
+     */
+    @GetMapping("/privacy")
+    public RestBean<AccountPrivacyVO> privacy(@RequestAttribute(Const.ATTR_USER_ID) int id) {
+        return RestBean.success(privacyService.getAccountPrivacy(id).asViewObject(AccountPrivacyVO.class));
     }
 }

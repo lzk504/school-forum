@@ -79,40 +79,45 @@ get('/api/user/details', data => {
 const coldTime = ref(0)
 const isEmailValid = ref(true)
 const onValidate = (prop, isValid) => {
-  if (prop === 'email') {
+  if (prop === 'email')
     isEmailValid.value = isValid
-  }
 }
 
 // 修改邮箱验证码
 function sendEmailCode() {
   emailFormRef.value.validate(isValid => {
-    coldTime.value = 60
-    get(`/api/auth/ask-code?email=${emailForm.email}&type=modify`, () => {
-      ElMessage.success(`验证码已发送到,${emailForm.email},请注意查收`)
-      const handle = setInterval(() => {
-        coldTime.value--
-        if (coldTime.value === 0) clearInterval(handle)
-      }, 1000)
-    }, (message) => {
-      ElMessage.error(message)
-      coldTime.value = 0
-    })
+
+      coldTime.value = 60
+      get(`/api/auth/ask-code?email=${emailForm.email}&type=modify`, () => {
+        ElMessage.success(`验证码已发送到,${emailForm.email},请注意查收`)
+        const handle = setInterval(() => {
+          coldTime.value--
+          if (coldTime.value === 0) clearInterval(handle)
+        }, 1000)
+      }, (message) => {
+        ElMessage.error(message)
+        coldTime.value = 0
+      })
+
   })
 }
 
 // 修改邮箱
 function modifyEmail() {
   emailFormRef.value.validate(isValid => {
-    post('/api/user/modify', emailForm, () => {
-      ElMessage.success('邮箱更新成功')
-      store.user.email = emailForm.email
-      emailForm.code = ''
-    }, (message) => {
-      ElMessage.error(message)
-    })
+    if (isValid) {
+      post('/api/user/modify', emailForm, () => {
+        ElMessage.success('邮箱更新成功')
+        store.user.email = emailForm.email
+        emailForm.code = ''
+      }, (message) => {
+        ElMessage.error(message)
+      })
+    }
   })
 }
+
+
 
 // 表单验证规则
 const rules = {
@@ -174,7 +179,7 @@ const rules = {
         </div>
       </Card>
       <Card style="margin-top: 10px" :icon="Message" title="电子邮件设置" desc="您可以在这里修改电子邮件地址">
-        <el-form :model="emailForm" :rules="rules" ref="emailFormRef" label-position="top"
+        <el-form :model="emailForm" :rules="rules" ref="emailFormRef" label-position="top" @validate="onValidate"
                  style="margin: 0 10px 10px 10px">
           <el-form-item label="电子邮件" prop="email">
             <el-input v-model="emailForm.email"/>

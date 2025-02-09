@@ -5,7 +5,8 @@ import {User, Message, Select} from "@element-plus/icons-vue";
 import {useStore} from "@/store";
 import {computed, reactive, ref} from "vue";
 import {ElMessage} from "element-plus";
-import {post, get} from "@/net";
+import {post, get, accessHeader} from "@/net";
+import axios from "axios";
 
 
 const store = useStore()
@@ -87,17 +88,17 @@ const onValidate = (prop, isValid) => {
 function sendEmailCode() {
   emailFormRef.value.validate(isValid => {
 
-      coldTime.value = 60
-      get(`/api/auth/ask-code?email=${emailForm.email}&type=modify`, () => {
-        ElMessage.success(`验证码已发送到,${emailForm.email},请注意查收`)
-        const handle = setInterval(() => {
-          coldTime.value--
-          if (coldTime.value === 0) clearInterval(handle)
-        }, 1000)
-      }, (message) => {
-        ElMessage.error(message)
-        coldTime.value = 0
-      })
+    coldTime.value = 60
+    get(`/api/auth/ask-code?email=${emailForm.email}&type=modify`, () => {
+      ElMessage.success(`验证码已发送到,${emailForm.email},请注意查收`)
+      const handle = setInterval(() => {
+        coldTime.value--
+        if (coldTime.value === 0) clearInterval(handle)
+      }, 1000)
+    }, (message) => {
+      ElMessage.error(message)
+      coldTime.value = 0
+    })
 
   })
 }
@@ -116,7 +117,6 @@ function modifyEmail() {
     }
   })
 }
-
 
 
 // 表单验证规则
@@ -144,6 +144,23 @@ const rules = {
   ]
 }
 
+// 头像上传前验证
+function beforeAvatarUpload(rawFile) {
+  if (rawFile.type !== 'image/jpeg' && rawFile.type !== 'image/png') {
+    ElMessage.error('头像图片必须为 JPG/PNG 格式!')
+    return false
+  } else if (rawFile.size / 1024 > 100) {
+    ElMessage.error('头像图片大小不能超过 100KB!')
+    return false
+  }
+  return true
+}
+
+// 头像上传成功回复信息
+function uploadSuccess(resp) {
+  ElMessage.success('头像上传成功')
+  store.user.avatar = resp.data
+}
 </script>
 
 <template>
@@ -173,6 +190,7 @@ const rules = {
           <el-form-item label="个人简介">
             <el-input type="textarea" :rows="6" v-model="baseForm.desc" maxlength="200"/>
           </el-form-item>
+
         </el-form>
         <div>
           <el-button @click="saveDetails" v-loading="loading.base" type="success">保存用户信息</el-button>
@@ -207,7 +225,18 @@ const rules = {
       <div style="position: sticky;top: 20px">
         <card>
           <div style="text-align: center;padding: 5px 15px 0 15px">
-            <el-avatar :size="70" src="https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png"/>
+            <el-avatar :size="70" :src="store.avatarUrl"/>
+            <div style="margin: 5px 0">
+              <el-upload
+                  :action="axios.defaults.baseURL +'/api/image/avatar'"
+                  :show-file-list="false"
+                  :before-upload="beforeAvatarUpload"
+                  :on-success="uploadSuccess"
+                  :headers="accessHeader()"
+              >
+                <el-button size="small" round>修改头像</el-button>
+              </el-upload>
+            </div>
             <div style="font-weight: bold">你好, {{ store.user.username }}</div>
           </div>
           <el-divider style="margin: 10px 0"/>

@@ -3,8 +3,16 @@
 import LightCard from "@/components/LightCard.vue";
 import {Calendar, CollectionTag, EditPen, Link} from "@element-plus/icons-vue";
 import WeatherInfo from "@/components/WeatherInfo.vue";
-import {computed, reactive} from "vue";
+import {computed, reactive, ref} from "vue";
 import {get} from "@/net";
+import TopicEditor from "@/components/TopicEditor.vue";
+
+//发帖编辑器
+const editor = ref(false)
+
+function openEditor() {
+  editor.value = true
+}
 
 // 今日日期
 const today = computed(() => {
@@ -38,17 +46,15 @@ navigator.geolocation.getCurrentPosition((position) => {
       enableHighAccuracy: true,
     }
 )
+
 </script>
 
 <template>
   <div class="topicList-main">
     <div style="flex:1">
       <light-card>
-        <div class="create-topic">
-          <el-icon>
-            <EditPen/>
-          </el-icon>
-          点击发表主题...
+        <div class="create-topic" @click="openEditor">
+          <el-icon><EditPen/></el-icon> 点击发表主题...
         </div>
       </light-card>
       <light-card style="margin-top: 10px;height: 30px">
@@ -116,6 +122,7 @@ navigator.geolocation.getCurrentPosition((position) => {
         </div>
       </div>
     </div>
+    <topic-editor :show="editor" @close="editor = false"/>
   </div>
 </template>
 

@@ -35,7 +35,7 @@ public class ImageServiceImpl extends ServiceImpl<ImageStoreMapper, ImageStore> 
     @Resource
     FlowUtils flowUtils;
 
-    private final SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+    private final SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd");
 
     /**
      * 上传头像
@@ -112,11 +112,11 @@ public class ImageServiceImpl extends ServiceImpl<ImageStoreMapper, ImageStore> 
     @Override
     public String uploadImage(MultipartFile file, int id) throws IOException {
         String key = Const.FORUM_IMAGE_COUNTER + id;
-        if (flowUtils.limitPeriodCounterCheck(key, 20, 3600))
+        if (!flowUtils.limitPeriodCounterCheck(key, 20, 3600))
             return null;
         String imageName = UUID.randomUUID().toString().replace("-", "");
         Date date = new Date();
-        imageName = "/cache/" + sdf.format(date) + "/" + imageName;
+        imageName = "/cache/" + format.format(date) + "/" + imageName;
         PutObjectArgs args = PutObjectArgs.builder()
                 .bucket("forum")
                 .stream(file.getInputStream(), file.getSize(), -1)

@@ -4,6 +4,7 @@ import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import com.example.entity.vo.response.WeatherVO;
 import com.example.service.WeatherService;
+import com.example.utils.Const;
 import jakarta.annotation.Resource;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -50,16 +51,16 @@ public class WeatherServiceImpl implements WeatherService {
      */
     private WeatherVO fetchFromCache(double longitude, double latitude) {
         JSONObject geo = this.decompressStringToJson(rest.getForObject(
-                "https://geoapi.qweather.com/v2/city/lookup?location="+longitude+","+latitude+"&key="+key, byte[].class));
-        if(geo == null) return null;
+                "https://geoapi.qweather.com/v2/city/lookup?location=" + longitude + "," + latitude + "&key=" + key, byte[].class));
+        if (geo == null) return null;
         JSONObject location = geo.getJSONArray("location").getJSONObject(0);
         int id = location.getInteger("id");
-        String key = "weather:"+id;
+        String key = Const.FORUM_WEATHER_CACHE + id;
         String cache = stringRedisTemplate.opsForValue().get(key);
-        if(cache != null)
+        if (cache != null)
             return JSONObject.parseObject(cache).to(WeatherVO.class);
         WeatherVO vo = this.fetchFromAPI(id, location);
-        if(vo == null) return null;
+        if (vo == null) return null;
         stringRedisTemplate.opsForValue().set(key, JSONObject.from(vo).toJSONString(), 1, TimeUnit.HOURS);
         return vo;
     }
@@ -75,12 +76,12 @@ public class WeatherServiceImpl implements WeatherService {
         WeatherVO vo = new WeatherVO();
         vo.setLocation(location);
         JSONObject now = this.decompressStringToJson(rest.getForObject(
-                "https://devapi.qweather.com/v7/weather/now?location="+id+"&key="+key, byte[].class));
-        if(now == null) return null;
+                "https://devapi.qweather.com/v7/weather/now?location=" + id + "&key=" + key, byte[].class));
+        if (now == null) return null;
         vo.setNow(now.getJSONObject("now"));
         JSONObject hourly = this.decompressStringToJson(rest.getForObject(
-                "https://devapi.qweather.com/v7/weather/24h?location="+id+"&key="+key, byte[].class));
-        if(hourly == null) return null;
+                "https://devapi.qweather.com/v7/weather/24h?location=" + id + "&key=" + key, byte[].class));
+        if (hourly == null) return null;
         vo.setHourly(new JSONArray(hourly.getJSONArray("hourly").stream().limit(5).toList()));
         return vo;
     }

@@ -21,8 +21,9 @@ public class ObjectController {
     /**
      * 处理获取头像图片的请求
      */
-    @GetMapping("/images/avatar/**")
+    @GetMapping("/images/**")
     public void imageFetch(HttpServletRequest req, HttpServletResponse resp) throws Exception {
+        resp.setContentType("image/jpeg");
         this.fetchImage(req, resp);
     }
 

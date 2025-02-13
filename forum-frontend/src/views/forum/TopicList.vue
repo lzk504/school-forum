@@ -10,9 +10,6 @@ import TopicEditor from "@/components/TopicEditor.vue";
 //发帖编辑器
 const editor = ref(false)
 
-function openEditor() {
-  editor.value = true
-}
 
 // 今日日期
 const today = computed(() => {
@@ -53,8 +50,11 @@ navigator.geolocation.getCurrentPosition((position) => {
   <div class="topicList-main">
     <div style="flex:1">
       <light-card>
-        <div class="create-topic" @click="openEditor">
-          <el-icon><EditPen/></el-icon> 点击发表主题...
+        <div class="create-topic" @click="editor=true">
+          <el-icon>
+            <EditPen/>
+          </el-icon>
+          点击发表主题...
         </div>
       </light-card>
       <light-card style="margin-top: 10px;height: 30px">

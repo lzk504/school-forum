@@ -4,6 +4,7 @@ import com.example.entity.RestBean;
 import com.example.service.ImageService;
 import com.example.utils.Const;
 import jakarta.annotation.Resource;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -54,7 +55,8 @@ public class ImageController {
      */
     @PostMapping("/cache")
     public RestBean<String> uploadImage(@RequestParam("file") MultipartFile file,
-                                        @RequestAttribute(Const.ATTR_USER_ID) int id
+                                        @RequestAttribute(Const.ATTR_USER_ID) int id,
+                                        HttpServletResponse response
     ) throws IOException {
         if (file.isEmpty())
             return RestBean.failure(400, "未上传图片");
@@ -63,9 +65,10 @@ public class ImageController {
         log.info("正在进行图片缓存操作");
         String url = imageService.uploadImage(file, id);
         if (url != null) {
-            log.info("图片缓存成功，图片大小:{} Mb", file.getSize() / 1024 / 1024);
+            log.info("图片缓存成功，图片大小:{} kb", file.getSize() / 1024 );
             return RestBean.success(url);
         } else {
+            response.setStatus(400);
             return RestBean.failure(400, "图片缓存失败，请联系系统管理员");
         }
     }

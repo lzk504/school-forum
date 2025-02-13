@@ -45,6 +45,7 @@ public class ObjectController {
                 imageService.fetchImageFormMinio(stream, imagePath);
                 //设置默认缓一个月
                 resp.setHeader("Cache-Control", "max-age=2592000");
+                resp.setHeader("Content-Type", "image/jpeg");
             } catch (ErrorResponseException e) {
                 if (e.response().code() == 404) {
                     resp.setStatus(404);

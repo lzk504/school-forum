@@ -1,10 +1,10 @@
 <script setup>
 import {Document} from "@element-plus/icons-vue";
-import {reactive} from "vue";
+import {computed, reactive, ref} from "vue";
 import '@vueup/vue-quill/dist/vue-quill.snow.css';
 import {Check} from "@element-plus/icons";
 import axios from "axios";
-import {accessHeader,get} from "@/net";
+import {accessHeader, get,post} from "@/net";
 import {ElMessage} from "element-plus";
 import {Quill, QuillEditor} from "@vueup/vue-quill";
 import ImageResize from "quill-image-resize-vue";
@@ -14,8 +14,8 @@ defineProps({
   show: Boolean
 })
 
-const emit = defineEmits(["close"]);
-
+const emit = defineEmits(["close", "success"]);
+const refEditor = ref()
 const editor = reactive({
   type: null,
   title: '',
@@ -24,11 +24,50 @@ const editor = reactive({
   types: []
 })
 
+function initEditor() {
+  refEditor.value.setContents('', 'user')
+  editor.title = ''
+  editor.type = null
+}
+
+//计算富文本长度
+const contentLength = computed(() => deltaToText(editor.text).length)
+
+//提取富文本内容为纯文本
+function deltaToText(delta) {
+  if (!delta.ops) return ""
+  let str = ""
+  for (let op of delta.ops)
+    str += op.insert
+  return str.replace(/\s/g, "")
+}
+
 // 获取论坛类型
 get('/api/forum/types', data => editor.types = data)
 
+// 提交帖子
 function submitTopic() {
-  console.info(editor.text)
+  const text = deltaToText(editor.text)
+  if (text.length > 20000) {
+    ElMessage.warning('帖子内容过长，请精简后再提交!')
+    return
+  }
+  if (!editor.title) {
+    ElMessage.warning('请输入帖子标题!')
+    return
+  }
+  if (!editor.type) {
+    ElMessage.warning('请选择帖子类型!')
+    return
+  }
+  post('/api/forum/create-topics', {
+    type: editor.type,
+    title: editor.title,
+    content: editor.text,
+  }, () => {
+    ElMessage.success('帖子发布成功!')
+    emit('success')
+  })
 }
 
 Quill.register('modules/imageResize', ImageResize)
@@ -89,7 +128,12 @@ const editorOption = {
 
 <template>
   <div>
-    <el-drawer :model-value="show" direction="btt" size="650px" :close-on-click-modal="false" @close="emit('close')">
+    <el-drawer :model-value="show"
+               direction="btt"
+               @open="initEditor"
+               :size="650"
+               :close-on-click-modal="false"
+               @close="emit('close')">
       <template #header>
         <div>
           <div style="font-weight: bold">发表新的帖子</div>
@@ -105,7 +149,7 @@ const editorOption = {
 
         </div>
         <div style="flex: 1">
-          <el-input v-model="editor.title" placeholder="请输入帖子标题" :prefix-icon="Document"
+          <el-input v-model="editor.title" placeholder="请输入帖子标题" :prefix-icon="Document" maxlength="30"
                     style="height: 100%"></el-input>
         </div>
       </div>
@@ -114,11 +158,12 @@ const editorOption = {
            element-loading-text="这种上传图片，请稍后...">
         <quill-editor v-model:content="editor.text" style="height: calc(100% - 45px)"
                       content-type="delta"
+                      ref="refEditor"
                       placeholder="今天想分享点什么呢？" :options="editorOption"/>
       </div>
       <div style="display: flex;justify-content: space-between; margin-top: 10px">
         <div style="color: gray;font-size: 13px">
-          当前字数666 (最大支持20000字)
+          当前字数{{ contentLength }} (最大支持20000字)
         </div>
         <div>
           <el-button type="primary" :icon="Check" @click="submitTopic" plain>立即发布</el-button>

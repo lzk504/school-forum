@@ -122,7 +122,7 @@ navigator.geolocation.getCurrentPosition((position) => {
         </div>
       </div>
     </div>
-    <topic-editor :show="editor" @close="editor = false"/>
+    <topic-editor :show="editor" @success="editor = false" @close="editor = false"/>
   </div>
 </template>
 
@@ -146,9 +146,11 @@ navigator.geolocation.getCurrentPosition((position) => {
       cursor: pointer;
     }
   }
+
   .dark .create-topic {
     background-color: #232323;
   }
+
   .info-text {
     display: flex;
     justify-content: space-between;

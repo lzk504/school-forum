@@ -1,14 +1,14 @@
 package com.example.controller;
-
 import com.example.entity.RestBean;
+import com.example.entity.vo.request.TopicCreateVO;
 import com.example.entity.vo.response.TopicTypeVO;
 import com.example.entity.vo.response.WeatherVO;
-import com.example.service.TopicTypeService;
+import com.example.service.TopicService;
 import com.example.service.WeatherService;
+import com.example.utils.Const;
 import jakarta.annotation.Resource;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import jakarta.validation.Valid;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -20,7 +20,7 @@ public class ForumController {
     private WeatherService weatherService;
 
     @Resource
-    private TopicTypeService topicTypeService;
+    private TopicService topicService;
 
     /**
      * 获取指定地理位置的天气信息
@@ -43,9 +43,23 @@ public class ForumController {
      */
     @GetMapping("/types")
     public RestBean<List<TopicTypeVO>> listTypes() {
-        return RestBean.success(topicTypeService.getTopicTypes()
+        return RestBean.success(topicService.getTopicTypes()
                 .stream()
                 .map(type -> type.asViewObject(TopicTypeVO.class))
                 .toList());
     }
+
+    /**
+     * 创建帖子
+     *
+     * @param vo  包含话题创建信息的视图对象
+     * @param uid 用户ID，通过请求属性获取
+     * @return 包含操作结果的RestBean对象，如果成功则无内容，如果失败则包含错误消息
+     */
+    @PostMapping("/create-topics")
+    public RestBean<Void> createTopics(@Valid @RequestBody TopicCreateVO vo
+            , @RequestAttribute(Const.ATTR_USER_ID) int uid) {
+        return RestBean.messageHandle(() -> topicService.createTopic(uid, vo));
+    }
+
 }

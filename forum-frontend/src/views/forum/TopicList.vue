@@ -146,7 +146,9 @@ navigator.geolocation.getCurrentPosition((position) => {
       cursor: pointer;
     }
   }
-
+  .dark .create-topic {
+    background-color: #232323;
+  }
   .info-text {
     display: flex;
     justify-content: space-between;

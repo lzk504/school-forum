@@ -1,6 +1,8 @@
 package com.example.controller;
+
 import com.example.entity.RestBean;
 import com.example.entity.vo.request.TopicCreateVO;
+import com.example.entity.vo.response.TopicPreviewVO;
 import com.example.entity.vo.response.TopicTypeVO;
 import com.example.entity.vo.response.WeatherVO;
 import com.example.service.TopicService;
@@ -8,6 +10,8 @@ import com.example.service.WeatherService;
 import com.example.utils.Const;
 import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -62,4 +66,16 @@ public class ForumController {
         return RestBean.messageHandle(() -> topicService.createTopic(uid, vo));
     }
 
+    /**
+     * 获取话题列表
+     *
+     * @param page 页码，从0开始
+     * @param type 类型，从0开始
+     * @return 包含话题列表的RestBean对象
+     */
+    @GetMapping("/list-topic")
+    public RestBean<List<TopicPreviewVO>> listTopic(@RequestParam @Min(0) int page,
+                                                    @RequestParam @Min(0) int type) {
+        return RestBean.success(topicService.listTopicByPage(page, type));
+    }
 }

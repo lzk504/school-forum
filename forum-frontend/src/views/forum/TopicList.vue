@@ -9,7 +9,11 @@ import TopicEditor from "@/components/TopicEditor.vue";
 
 //发帖编辑器
 const editor = ref(false)
+// 帖子列表数据
+const list = ref(null)
 
+// 获取帖子列表数据
+get('/api/forum/list-topic?page=0&type=0', data => list.value = data)
 
 // 今日日期
 const today = computed(() => {
@@ -60,7 +64,10 @@ navigator.geolocation.getCurrentPosition((position) => {
       <light-card style="margin-top: 10px;height: 30px">
       </light-card>
       <div style="margin-top: 10px;display: flex;flex-direction: column;gap: 10px">
-        <light-card style="height: 150px" v-for="item in 10">
+        <light-card style="height: 150px" v-for="item in list">
+          <div>{{item.title}}</div>
+          <div>{{item.image}}</div>
+          <div>{{item.text}}</div>
         </light-card>
       </div>
     </div>

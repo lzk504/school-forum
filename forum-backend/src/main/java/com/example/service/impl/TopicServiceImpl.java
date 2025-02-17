@@ -1,13 +1,16 @@
 package com.example.service.impl;
 
+import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.entity.dto.Topic;
 import com.example.entity.dto.TopicType;
 import com.example.entity.vo.request.TopicCreateVO;
+import com.example.entity.vo.response.TopicPreviewVO;
 import com.example.mapper.TopicMapper;
 import com.example.mapper.TopicTypeMapper;
 import com.example.service.TopicService;
+import com.example.utils.CacheUtils;
 import com.example.utils.Const;
 import com.example.utils.FlowUtils;
 import jakarta.annotation.PostConstruct;
@@ -15,9 +18,7 @@ import jakarta.annotation.Resource;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
-import java.util.Date;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -31,6 +32,11 @@ public class TopicServiceImpl extends ServiceImpl<TopicMapper, Topic> implements
 
     // 话题类型集合，用于快速检查话题类型是否存在。
     private Set<Integer> types = null;
+    @Resource
+    private TopicMapper topicMapper;
+
+    @Resource
+    private CacheUtils cacheUtils;
 
     // 初始化话题类型集合，在对象创建后执行。
     @PostConstruct
@@ -73,9 +79,68 @@ public class TopicServiceImpl extends ServiceImpl<TopicMapper, Topic> implements
         topic.setContent(vo.getContent().toJSONString());
         topic.setUid(uid);
         topic.setTime(new Date());
-        if (this.save(topic))
+        if (this.save(topic)) {
+            cacheUtils.deleteCache(Const.FORUM_TOPIC_PREVIEW_CACHE + "*");
             return null;
-        else return "内部错误请联系管理员";
+        } else {
+            return "内部错误请联系管理员";
+        }
+    }
+
+    /**
+     * 按页获取话题列表
+     * <p>
+     * 根据给定的页码和话题类型，从数据库中查询对应的话题列表，并转换为TopicPreviewVO对象列表返回。
+     *
+     * @param page 页码，从0开始
+     * @param type 话题类型，0表示获取所有类型的话题
+     * @return 包含话题列表的TopicPreviewVO对象集合，如果没有找到对应的话题，则返回null
+     */
+    @Override
+    public List<TopicPreviewVO> listTopicByPage(int page, int type) {
+        String key = Const.FORUM_TOPIC_PREVIEW_CACHE + page + ":" + type;
+        List<TopicPreviewVO> list = cacheUtils.takeFromCacheList(key, TopicPreviewVO.class);
+        if (list != null) return list;
+        List<Topic> topics;
+        if (type == 0)
+            topics = topicMapper.topicList(page * 10);
+        else
+            topics = topicMapper.topicListByType(page * 10, type);
+        if (topics.isEmpty()) return null;
+        list = topics.stream().map(this::resolveTopicPreview).toList();
+        cacheUtils.saveCacheList(key, list, 60);
+        return list;
+    }
+
+
+    /**
+     * 将Topic对象转换为TopicPreviewVO对象
+     * 将Topic对象的属性复制到TopicPreviewVO对象中，并提取Topic对象中的文本和图片信息进行处理。
+     * 对于文本信息，提取出前300个字符作为预览文本；对于图片信息，提取出所有图片的地址。
+     *
+     * @param topic Topic对象
+     * @return 转换后的TopicPreviewVO对象
+     */
+    private TopicPreviewVO resolveTopicPreview(Topic topic) {
+        TopicPreviewVO vo = new TopicPreviewVO();
+        BeanUtils.copyProperties(topic, vo);
+        List<String> images = new ArrayList<>();
+        StringBuilder previewText = new StringBuilder();
+        JSONArray ops = JSONObject.parseObject(topic.getContent()).getJSONArray("ops");
+        for (Object o : ops) {
+            Object insert = JSONObject.from(o).get("insert");
+            if (insert instanceof String text) {
+                if (previewText.length() >= 300) continue;
+                previewText.append(text);
+            } else if (insert instanceof Map<?, ?> map) {
+                Optional.ofNullable(map.get("image"))
+                        .ifPresent(obj -> images.add(obj.toString()));
+            }
+        }
+        vo.setText(previewText.length() > 300 ? previewText.substring(0, 300) : previewText.toString());
+        vo.setImages(images);
+        return vo;
+
     }
 
     /**

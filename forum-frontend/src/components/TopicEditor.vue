@@ -10,10 +10,13 @@ import {Quill, QuillEditor} from "@vueup/vue-quill";
 import ImageResize from "quill-image-resize-vue";
 import {ImageExtend, QuillWatch} from "quill-image-super-solution-module";
 import ColorDot from "@/components/ColorDot.vue";
+import {useStore} from "@/store";
 
 defineProps({
   show: Boolean
 })
+
+const store = useStore()
 
 const emit = defineEmits(["close", "success"]);
 // 富文本编辑器引用
@@ -24,7 +27,6 @@ const editor = reactive({
   title: '',
   text: '',
   loading: false,
-  types: []
 })
 
 // 初始化富文本编辑器内容
@@ -46,8 +48,6 @@ function deltaToText(delta) {
   return str.replace(/\s/g, "")
 }
 
-// 获取论坛类型
-get('/api/forum/types', data => editor.types = data)
 
 // 提交帖子
 function submitTopic() {
@@ -147,8 +147,8 @@ const editorOption = {
       <div style="display: flex;gap: 10px">
         <div style="width: 150px">
           <el-select placeholder="选择主题类型..." v-model="editor.type"
-                     :disabled="!editor.types.length" value-key="id">
-            <el-option v-for="item in editor.types" :value="item"  :label="item.name">
+                     :disabled="!store.forum.types.length" value-key="id">
+            <el-option v-for="item in store.forum.types" :value="item"  :label="item.name">
               <div>
                 <color-dot :color = "item.color" />
                 <span style="margin-left: 5px">{{ item.name }}</span>

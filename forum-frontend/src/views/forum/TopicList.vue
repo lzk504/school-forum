@@ -3,24 +3,68 @@
 import LightCard from "@/components/LightCard.vue";
 import {Calendar, CollectionTag, EditPen, Link} from "@element-plus/icons-vue";
 import WeatherInfo from "@/components/WeatherInfo.vue";
-import {computed, onMounted, reactive, ref} from "vue";
+import {computed, reactive, ref, watch} from "vue";
 import {get} from "@/net";
 import TopicEditor from "@/components/TopicEditor.vue";
 import {useStore} from "@/store";
 import axios from "axios";
+import ColorDot from "@/components/ColorDot.vue";
 //发帖编辑器
 const editor = ref(false)
-// 帖子列表数据
-const list = ref(null)
 
 const store = useStore()
-get('/api/forum/types', data => store.forum.types = data)
+
+// 帖子列表数据
+const topics = reactive({
+  list: [],
+  type: 0,
+  page: 0,
+  end: false,
+  top: []
+})
+
+
+// 监听板块类型变化，重新获取帖子列表数据
+
+watch(() => topics.type, () => resetList(), {immediate: true})
+
+get('/api/forum/top-topic', data => topics.top = data)
+
+// 获取板块类型数据
+get('/api/forum/types', data => {
+      const array = []
+      array.push({name: '全部', id: 0, color: 'linear-gradient(45deg, white, red, orange, gold, green, blue)'})
+      data.forEach(d => array.push(d))
+      store.forum.types = array
+    }
+)
 
 // 获取帖子列表数据
 function updateList() {
-  get('/api/forum/list-topic?page=0&type=0', data => list.value = data)
+  if (topics.end) return
+  get(`/api/forum/list-topic?page=${topics.page}&type=${topics.type}`, data => {
+    if (data) {
+      data.forEach(d => topics.list.push(d))
+      topics.page++
+    }
+    if (!data || data.length < 10)
+      topics.end = true
+  })
 }
 
+// 帖子创建成功，重置列表数据
+function onTopicsCreate() {
+  editor.value = false
+  resetList()
+}
+
+// 重置帖子列表
+function resetList() {
+  topics.page = 0
+  topics.end = false
+  topics.list = []
+  updateList()
+}
 
 // 今日日期
 const today = computed(() => {
@@ -28,7 +72,7 @@ const today = computed(() => {
   return `${date.getFullYear()} 年 ${date.getMonth() + 1} 月 ${date.getDate()} 日`
 })
 
-// 天气信息
+// 天气信息列表
 const weather = reactive({
   location: {},
   now: {},
@@ -36,6 +80,7 @@ const weather = reactive({
   success: false
 })
 
+// 获取天气信息
 navigator.geolocation.getCurrentPosition((position) => {
       const longitude = position.coords.longitude;
       const latitude = position.coords.latitude;
@@ -54,9 +99,8 @@ navigator.geolocation.getCurrentPosition((position) => {
       enableHighAccuracy: true,
     }
 )
-onMounted(() => {
-  updateList()
-})
+
+
 </script>
 
 <template>
@@ -70,43 +114,60 @@ onMounted(() => {
           点击发表主题...
         </div>
       </light-card>
-      <light-card style="margin-top: 10px;height: 30px">
+      <light-card style="margin-top: 10px;display:flex;flex-direction:column;gap:10px ">
+        <div v-for="item in topics.top" class="top-topic">
+          <el-tag type="info" size="small">置顶</el-tag>
+          <div>{{ item.title }}</div>
+          <div>{{ new Date(item.time).toLocaleString() }}</div>
+        </div>
       </light-card>
-      <div style="margin-top: 10px;display: flex;flex-direction: column;gap: 10px">
-        <light-card v-for="item in list" class="topic-card">
-          <div style="display: flex">
-            <div>
-              <el-avatar :size="30" :src="`${axios.defaults.baseURL}/images${item.avatar}`"/>
-            </div>
-            <div style="margin-left: 7px;transform: translate(-2px)">
-              <div style="font-size: 13px;font-weight: bold">{{ item.username }}</div>
-              <div style="font-size: 12px;color: gray">
-                <el-icon>
-                  <Clock/>
-                </el-icon>
-                <div style="margin-left: 2px;display: inline-block;transform: translateY(-2px)">
-                  {{ new Date(item.time).toLocaleString() }}
+      <light-card style="margin-top: 10px;display: flex;gap: 7px">
+        <div :class="`type-select-card ${topics.type === item.id ? 'active' : ''}`" v-for="item in store.forum.types"
+             @click="topics.type = item.id">
+          <color-dot :color="item.color"/>
+          {{ item.name }}
+        </div>
+      </light-card>
+      <transition name="el-fade-in" mode="out-in">
+        <div v-if="topics.list.length">
+          <div style="margin-top: 10px;display: flex;flex-direction: column;gap: 10px" v-infinite-scroll="updateList">
+            <light-card v-for="item in topics.list" class="topic-card">
+              <div style="display: flex">
+                <div>
+                  <el-avatar :size="30" :src="`${axios.defaults.baseURL}/images${item.avatar}`"/>
+                </div>
+                <div style="margin-left: 7px;transform: translate(-2px)">
+                  <div style="font-size: 13px;font-weight: bold">{{ item.username }}</div>
+                  <div style="font-size: 12px;color: gray">
+                    <el-icon>
+                      <Clock/>
+                    </el-icon>
+                    <div style="margin-left: 2px;display: inline-block;transform: translateY(-2px)">
+                      {{ new Date(item.time).toLocaleString() }}
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
-          <div style="margin-top: 7px">
-            <div class="topic-type"
-                 :style="{
+              <div style="margin-top: 7px">
+                <div class="topic-type"
+                     :style="{
                                 color: store.findTypeById(item.type)?.color + 'EE',
                                 'border-color': store.findTypeById(item.type)?.color + '77',
                                 'background': store.findTypeById(item.type)?.color + '33'
                              }">
-              {{ store.findTypeById(item.type).name }}
-            </div>
-            <span style="font-weight: bold;margin-left: 7px">{{ item.title }}</span>
+                  {{ store.findTypeById(item.type).name }}
+                </div>
+                <span style="font-weight: bold;margin-left: 7px">{{ item.title }}</span>
+              </div>
+              <div class="topic-content">{{ item.text }}</div>
+              <div style="display: grid;grid-template-columns: repeat(3, 1fr);grid-gap: 10px">
+                <el-image class="topic-image" v-for="img in item.images" :src="img" fit="cover"></el-image>
+              </div>
+            </light-card>
           </div>
-          <div class="topic-content">{{ item.text }}</div>
-          <div style="display: grid;grid-template-columns: repeat(3, 1fr);grid-gap: 10px">
-            <el-image class="topic-image" v-for="img in item.images" :src="img" fit="cover"></el-image>
-          </div>
-        </light-card>
-      </div>
+        </div>
+      </transition>
+
     </div>
     <div style="width: 260px">
       <div style="position: sticky;top: 20px">
@@ -166,11 +227,57 @@ onMounted(() => {
         </div>
       </div>
     </div>
-    <topic-editor :show="editor" @success="editor = false;updateList()" @close="editor = false"/>
+    <topic-editor :show="editor" @success="onTopicsCreate" @close="editor = false"/>
   </div>
 </template>
 
 <style lang="less" scoped>
+.top-topic {
+  display: flex;
+
+  div:first-of-type {
+    font-size: 13px;
+    margin-left: 10px;
+    font-weight: bold;
+    opacity: 0.8;
+    transition: color .3s;
+
+    &:hover {
+      cursor: pointer;
+      color: gray;
+    }
+  }
+
+  div:nth-of-type(2) {
+    flex: 1;
+    font-size: 12px;
+    color: grey;
+    text-align: right;
+
+    &:hover {
+      cursor: pointer;
+    }
+  }
+}
+
+.type-select-card {
+  background-color: #f5f5f5;
+  padding: 2px 5px;
+  font-size: 12px;
+  border-radius: 3px;
+  box-sizing: border-box;
+  transition: background-color .3s;
+
+  &.active {
+    border: solid 1px #ead4c4;
+  }
+
+  &:hover {
+    cursor: pointer;
+    background-color: #dadada;
+  }
+}
+
 .topic-card {
   padding: 15px;
   transition: scale .2s;

@@ -6,7 +6,10 @@ import jakarta.annotation.Resource;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 @Component
@@ -68,6 +71,18 @@ public class CacheUtils {
         if (s == null)
             return null;
         return JSONArray.parseArray(s).toList(itemType);
+    }
+
+
+    /**
+     * 删除与指定键相关的缓存模式。
+     *
+     * @param key 指定键
+     * @throws IllegalArgumentException 如果 key 为 null
+     */
+    public void deleteCachePattern(String key) {
+        Set<String> keys = Optional.ofNullable(template.keys(key)).orElse(Collections.emptySet());
+        template.delete(keys);
     }
 
     /**

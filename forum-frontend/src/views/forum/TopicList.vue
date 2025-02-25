@@ -1,7 +1,18 @@
 <script setup>
 
 import LightCard from "@/components/LightCard.vue";
-import {Calendar, CollectionTag, EditPen, Link} from "@element-plus/icons-vue";
+import {
+  Calendar,
+  Clock,
+  CollectionTag,
+  Compass,
+  Document,
+  Edit,
+  EditPen,
+  Link,
+  Picture,
+  Microphone
+} from "@element-plus/icons-vue";
 import WeatherInfo from "@/components/WeatherInfo.vue";
 import {computed, reactive, ref, watch} from "vue";
 import {get} from "@/net";
@@ -9,6 +20,7 @@ import TopicEditor from "@/components/TopicEditor.vue";
 import {useStore} from "@/store";
 import axios from "axios";
 import ColorDot from "@/components/ColorDot.vue";
+
 //发帖编辑器
 const editor = ref(false)
 
@@ -112,8 +124,27 @@ navigator.geolocation.getCurrentPosition((position) => {
             <EditPen/>
           </el-icon>
           点击发表主题...
+          <div>
+            <el-icon>
+              <Edit/>
+            </el-icon>
+            <el-icon>
+              <Document/>
+            </el-icon>
+            <el-icon>
+              <Compass/>
+            </el-icon>
+            <el-icon>
+              <Picture/>
+            </el-icon>
+            <el-icon>
+              <Microphone/>
+            </el-icon>
+          </div>
         </div>
+
       </light-card>
+      <el-divider/>
       <light-card style="margin-top: 10px;display:flex;flex-direction:column;gap:10px ">
         <div v-for="item in topics.top" class="top-topic">
           <el-tag type="info" size="small">置顶</el-tag>
@@ -278,6 +309,12 @@ navigator.geolocation.getCurrentPosition((position) => {
   }
 }
 
+.dark .type-select-card {
+  color: #dadada;
+  border-color: #ffffff33;
+  background: #ffffff33;
+}
+
 .topic-card {
   padding: 15px;
   transition: scale .2s;
@@ -332,6 +369,14 @@ navigator.geolocation.getCurrentPosition((position) => {
 
     &:hover {
       cursor: pointer;
+    }
+
+    div:first-of-type {
+      margin-top: 10px;
+      display: flex;
+      gap: 13px;
+      font-size: 18px;
+      color: grey
     }
   }
 

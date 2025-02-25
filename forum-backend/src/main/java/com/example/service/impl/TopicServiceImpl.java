@@ -82,7 +82,7 @@ public class TopicServiceImpl extends ServiceImpl<TopicMapper, Topic> implements
         topic.setUid(uid);
         topic.setTime(new Date());
         if (this.save(topic)) {
-            cacheUtils.deleteCache(Const.FORUM_TOPIC_PREVIEW_CACHE + "*");
+            cacheUtils.deleteCachePattern(Const.FORUM_TOPIC_PREVIEW_CACHE + "*");
             return null;
         } else {
             return "内部错误请联系管理员";

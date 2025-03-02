@@ -5,6 +5,7 @@ import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.example.entity.dto.Interact;
 import com.example.entity.dto.Topic;
 import com.example.entity.dto.TopicType;
 import com.example.entity.vo.request.TopicCreateVO;
@@ -22,9 +23,13 @@ import com.example.utils.FlowUtils;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.Resource;
 import org.springframework.beans.BeanUtils;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Service
@@ -37,10 +42,14 @@ public class TopicServiceImpl extends ServiceImpl<TopicMapper, Topic> implements
     private AccountMapper accountMapper;
 
     @Resource
-    FlowUtils flowUtils;
+    private FlowUtils flowUtils;
 
     @Resource
-    CommonUtils commonUtils;
+    private CommonUtils commonUtils;
+
+    @Resource
+    private StringRedisTemplate template;
+
 
     // 话题类型集合，用于快速检查话题类型是否存在。
     private Set<Integer> types = null;
@@ -153,6 +162,83 @@ public class TopicServiceImpl extends ServiceImpl<TopicMapper, Topic> implements
         TopicDetailVO.User user = new TopicDetailVO.User();
         vo.setUser(commonUtils.fillUserDetailsByPrivacy(user, topic.getUid()));
         return vo;
+    }
+
+    /**
+     * 处理用户与帖子的点赞收藏操作：
+     * 由于论坛交互数据实时到mysql数据库不太现实，所以需要redis缓存交互数据，并在合适时机一次性入库
+     * 当数据更像时，会创建一个定时任务，此任务会在一段时间之后执行
+     * 将全部缓存的交互数据入库，从而缓解mysql的压力。
+     * 在定时任务已经设定期间又有新的更新到来，仅更新redis不会创建新的定时任务。
+     *
+     * @param interact 包含用户ID和帖子ID的Interact对象
+     * @param state    操作状态，true表示点赞或收藏，false表示取消点赞或收藏
+     */
+    @Override
+    public void interact(Interact interact, boolean state) {
+        String type = interact.getType();
+        synchronized (type.intern()) {
+            template.opsForHash().put(type, interact.toKey(), Boolean.toString(state));
+            this.saveInteractTask(type);
+        }
+    }
+
+    // 存储当前状态，用于判断是否需要创建新的定时任务
+    private final Map<String, Boolean> state = new HashMap<>();
+
+    // 创建定时任务，用于定期保存互动记录到数据库
+    ScheduledExecutorService service = Executors.newScheduledThreadPool(2);
+
+
+    /**
+     * 异步保存互动记录到数据库的任务调度方法。
+     *
+     * @param type 互动类型
+     *             <p>
+     *             如果指定类型的互动记录尚未被处理（即state中未标记为已处理），则将该类型的互动记录标记为正在处理，
+     *             并使用service.schedule方法异步调度一个任务，该任务将在10秒后执行，执行时会调用saveInteract方法保存互动记录到数据库，
+     *             然后将指定类型的互动记录标记为已处理。如果指定类型的互动记录已经被处理过，则不会重复处理。
+     */
+    private void saveInteractTask(String type) {
+        if (!state.getOrDefault(type, false)) {
+            state.put(type, true);
+            service.schedule(() -> {
+                this.saveInteract(type);
+                state.put(type, false);
+            }, 5, TimeUnit.SECONDS);
+        }
+    }
+
+    /**
+     * 保存互动记录到数据库。
+     *
+     * @param type 互动类型
+     *             <p/>
+     *             此方法首先通过同步块确保线程安全，然后遍历指定类型的所有互动记录。
+     *             对于每个互动记录，根据其值（true或false）将其添加到“check”或“uncheck”列表中。
+     *             如果“check”列表不为空，则调用baseMapper的addInteract方法将互动记录添加到数据库中。
+     *             如果“uncheck”列表不为空，则调用baseMapper的deleteInteract方法从数据库中删除互动记录。
+     *             最后，从缓存中删除指定类型的所有互动记录。
+     */
+    private void saveInteract(String type) {
+        synchronized (type.intern()) {
+            List<Interact> check = new LinkedList<>();
+            List<Interact> uncheck = new LinkedList<>();
+            template.opsForHash().entries(type).forEach((key, value) -> {
+                if (Boolean.parseBoolean(value.toString())) {
+                    check.add(Interact.parseInteract(key.toString(), type));
+                } else {
+                    uncheck.add(Interact.parseInteract(key.toString(), type));
+                }
+            });
+            if (!check.isEmpty()) {
+                baseMapper.addInteract(check, type);
+            }
+            if (!uncheck.isEmpty()) {
+                baseMapper.deleteInteract(uncheck, type);
+            }
+            template.delete(type);
+        }
     }
 
 

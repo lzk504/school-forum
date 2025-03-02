@@ -1,6 +1,7 @@
 package com.example.controller;
 
 import com.example.entity.RestBean;
+import com.example.entity.dto.Interact;
 import com.example.entity.vo.request.TopicCreateVO;
 import com.example.entity.vo.response.*;
 import com.example.service.TopicService;
@@ -8,10 +9,11 @@ import com.example.service.WeatherService;
 import com.example.utils.Const;
 import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Pattern;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Date;
 import java.util.List;
 
 @RestController
@@ -97,4 +99,23 @@ public class ForumController {
     public RestBean<TopicDetailVO> topicDetail(@RequestParam @Min(0) int tid) {
         return RestBean.success(topicService.getTopicDetail(tid));
     }
+
+    /**
+     * 处理用户与话题的互动操作
+     *
+     * @param tid   帖子ID，必须为非负整数
+     * @param type  互动类型，只能是"like"或"collect"
+     * @param state 互动状态，true表示进行互动，false表示取消互动
+     * @param uid   当前用户ID，从请求属性中获取
+     * @return 返回包含操作结果的RestBean对象
+     */
+    @GetMapping("/interact")
+    public RestBean<Void> interact(@RequestParam @Min(0) int tid,
+                                   @RequestParam @Pattern(regexp = "(like|collect)") String type,
+                                   @RequestParam boolean state,
+                                   @RequestAttribute(Const.ATTR_USER_ID) int uid) {
+        topicService.interact(new Interact(tid, uid, new Date(), type), state);
+        return RestBean.success();
+    }
+
 }

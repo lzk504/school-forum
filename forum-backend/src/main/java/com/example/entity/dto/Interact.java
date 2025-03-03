@@ -19,7 +19,7 @@ public class Interact {
      * @return 用户ID和话题ID组合成的唯一键
      */
     public String toKey() {
-        return uid + ":" + tid;
+        return tid + ":" + uid;
     }
 
 

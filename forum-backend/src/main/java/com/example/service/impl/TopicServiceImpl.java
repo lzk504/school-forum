@@ -159,6 +159,11 @@ public class TopicServiceImpl extends ServiceImpl<TopicMapper, Topic> implements
         TopicDetailVO vo = new TopicDetailVO();
         Topic topic = baseMapper.selectById(tid);
         BeanUtils.copyProperties(topic, vo);
+        TopicDetailVO.Interact interact = new TopicDetailVO.Interact(
+                checkInteract(tid, topic.getUid(), "like"),
+                checkInteract(tid, topic.getUid(), "collect")
+        );
+        vo.setInteract(interact);
         TopicDetailVO.User user = new TopicDetailVO.User();
         vo.setUser(commonUtils.fillUserDetailsByPrivacy(user, topic.getUid()));
         return vo;
@@ -181,6 +186,22 @@ public class TopicServiceImpl extends ServiceImpl<TopicMapper, Topic> implements
             template.opsForHash().put(type, interact.toKey(), Boolean.toString(state));
             this.saveInteractTask(type);
         }
+    }
+
+    /**
+     * 检查指定帖子和用户的互动状态
+     *
+     * @param tid  话题ID
+     * @param uid  用户ID
+     * @param type 话题类型
+     * @return 如果用户与话题存在互动记录，则返回true；否则返回false
+     */
+    private boolean checkInteract(int tid, int uid, String type) {
+        String key = tid + ":" + uid;
+        if (template.opsForHash().hasKey(type, key))
+            return Boolean.parseBoolean(template.opsForHash().entries(type).get(key).toString());
+        return baseMapper.userInteractCount(tid, uid, type) > 0;
+
     }
 
     // 存储当前状态，用于判断是否需要创建新的定时任务
@@ -254,6 +275,8 @@ public class TopicServiceImpl extends ServiceImpl<TopicMapper, Topic> implements
         TopicPreviewVO vo = new TopicPreviewVO();
         BeanUtils.copyProperties(accountMapper.selectById(topic.getUid()), vo);
         BeanUtils.copyProperties(topic, vo);
+        vo.setLike(baseMapper.interactCount(topic.getId(), "like"));
+        vo.setCollect(baseMapper.interactCount(topic.getId(), "collect"));
         List<String> images = new ArrayList<>();
         StringBuilder previewText = new StringBuilder();
         JSONArray ops = JSONObject.parseObject(topic.getContent()).getJSONArray("ops");

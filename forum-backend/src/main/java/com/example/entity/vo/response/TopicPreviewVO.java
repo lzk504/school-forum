@@ -1,6 +1,5 @@
 package com.example.entity.vo.response;
 
-import jakarta.validation.constraints.Max;
 import lombok.Data;
 
 import java.util.Date;
@@ -17,4 +16,6 @@ public class TopicPreviewVO {
     Integer uid;
     String username;
     String avatar;
+    int like;
+    int collect;
 }

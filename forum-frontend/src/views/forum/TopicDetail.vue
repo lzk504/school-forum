@@ -26,7 +26,9 @@ const topic = reactive({
 
 // 获取帖子详情
 get(`/api/forum/topic-detail?tid=${tid}`, data => {
-    topic.data = data;
+    topic.data = data
+    topic.like = data.interact.like
+    topic.collect = data.interact.collect
 })
 
 const content = computed(() => {
@@ -39,7 +41,7 @@ const content = computed(() => {
 function interact(type, message) {
     get(`/api/forum/interact?tid=${tid}&type=${type}&state=${!topic[type]}`, () => {
         topic[type] = !topic[type]
-        if(topic[type])
+        if (topic[type])
             ElMessage.success(`${message}成功！`)
         else
             ElMessage.success(`已取消${message}！`)
@@ -90,17 +92,27 @@ function interact(type, message) {
                 </div>
             </div>
             <div class="topic-main-right">
+                <div style="font-size: 13px;color: grey;text-align: left">
+                    <div>发帖时间: {{new Date(topic.data.time).toLocaleString()}}</div>
+                </div>
+                <el-divider/>
                 <div class="topic-content" v-html="content"></div>
+
                 <div style="text-align: right;margin-top:30px">
+                    <el-divider/>
                     <div style="text-align: right;margin-top: 30px">
                         <interact-button name="点个赞吧" check-name="已点赞" color="red" :checked="topic.like"
                                          @check="interact('like', '点赞')">
-                            <el-icon><CircleCheck/></el-icon>
+                            <el-icon>
+                                <CircleCheck/>
+                            </el-icon>
                         </interact-button>
                         <interact-button name="收藏本帖" check-name="已收藏" color="orange" :checked="topic.collect"
                                          @check="interact('collect', '收藏')"
                                          style="margin-left: 20px">
-                            <el-icon><Star/></el-icon>
+                            <el-icon>
+                                <Star/>
+                            </el-icon>
                         </interact-button>
                     </div>
                 </div>

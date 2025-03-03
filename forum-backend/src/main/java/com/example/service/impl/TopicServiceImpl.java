@@ -23,6 +23,7 @@ import com.example.utils.FlowUtils;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.Resource;
 import org.springframework.beans.BeanUtils;
+import org.springframework.context.annotation.Bean;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -186,6 +187,25 @@ public class TopicServiceImpl extends ServiceImpl<TopicMapper, Topic> implements
             template.opsForHash().put(type, interact.toKey(), Boolean.toString(state));
             this.saveInteractTask(type);
         }
+    }
+
+
+    /**
+     * 获取指定用户的收藏帖子列表（预览版）
+     *
+     * @param uid 用户ID
+     * @return 包含用户收藏帖子预览信息的列表，每个元素为TopicPreviewVO类型
+     */
+    @Override
+    public List<TopicPreviewVO> listTopicCollects(int uid) {
+        return baseMapper.collectTopics(uid)
+                .stream()
+                .map(topics -> {
+                    TopicPreviewVO vo = new TopicPreviewVO();
+                    BeanUtils.copyProperties(topics, vo);
+                    return vo;
+                })
+                .toList();
     }
 
     /**

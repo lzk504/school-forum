@@ -22,6 +22,7 @@ import axios from "axios";
 import ColorDot from "@/components/ColorDot.vue";
 import router from "@/router";
 import TopicTag from "@/components/TopicTag.vue";
+import TopicCollectList from "@/components/TopicCollectList.vue";
 
 //发帖编辑器
 const editor = ref(false)
@@ -37,6 +38,7 @@ const topics = reactive({
     top: []
 })
 
+const collects = ref(false)
 
 // 监听板块类型变化，重新获取帖子列表数据
 
@@ -161,7 +163,6 @@ navigator.geolocation.getCurrentPosition((position) => {
                          v-infinite-scroll="updateList">
                         <light-card v-for="item in topics.list" class="topic-card"
                                     @click="router.push('/index/topic-detail/'+item.id)">
-                            >
                             <div style="display: flex">
                                 <div>
                                     <el-avatar :size="30" :src="`${axios.defaults.baseURL}/images${item.avatar}`"/>
@@ -210,6 +211,14 @@ navigator.geolocation.getCurrentPosition((position) => {
         <div style="width: 260px">
             <div style="position: sticky;top: 20px">
                 <light-card>
+                    <div class="collect-list-button" @click="collects=true">
+                        <span><el-icon><FolderOpened/></el-icon> 查看我的收藏</span>
+                        <el-icon style="transform: translateY(3px)">
+                            <ArrowRightBold/>
+                        </el-icon>
+                    </div>
+                </light-card>
+                <light-card style="margin-top: 10px">
                     <div style="font-weight: bold;color: red">
                         <el-icon>
                             <CollectionTag/>
@@ -266,6 +275,7 @@ navigator.geolocation.getCurrentPosition((position) => {
             </div>
         </div>
         <topic-editor :show="editor" @success="onTopicsCreate" @close="editor = false"/>
+        <topic-collect-list :show="collects" @close="collects=false"/>
     </div>
 </template>
 
@@ -393,6 +403,18 @@ navigator.geolocation.getCurrentPosition((position) => {
     .friend-link {
         border-radius: 5px;
         overflow: hidden;
+    }
+}
+
+.collect-list-button {
+    font-size: 13px;
+    display: flex;
+    justify-content: space-between;
+    transition: .3s;
+
+    &:hover {
+        cursor: pointer;
+        opacity: 0.6;
     }
 }
 </style>

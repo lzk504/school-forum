@@ -47,4 +47,10 @@ public interface TopicService extends IService<Topic> {
      * 处理用户与帖子的点赞收藏操作
      */
     void interact(Interact interact, boolean state);
+
+
+    /**
+     * 获取指定用户的收藏列表
+     */
+    List<TopicPreviewVO> listTopicCollects(int uid);
 }

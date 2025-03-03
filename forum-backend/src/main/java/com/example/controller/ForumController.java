@@ -118,4 +118,14 @@ public class ForumController {
         return RestBean.success();
     }
 
+    /**
+     * 获取用户的收藏列表
+     *
+     * @param uid 用户ID，通过@RequestAttribute注解从请求属性中获取
+     */
+    @GetMapping("/collects")
+    public RestBean<List<TopicPreviewVO>> collects(@RequestAttribute(Const.ATTR_USER_ID) int uid) {
+        return RestBean.success(topicService.listTopicCollects(uid));
+    }
+
 }

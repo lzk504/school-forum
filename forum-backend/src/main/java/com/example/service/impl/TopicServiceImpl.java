@@ -23,7 +23,6 @@ import com.example.utils.FlowUtils;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.Resource;
 import org.springframework.beans.BeanUtils;
-import org.springframework.context.annotation.Bean;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -156,13 +155,13 @@ public class TopicServiceImpl extends ServiceImpl<TopicMapper, Topic> implements
      * @return 帖子详情对象
      */
     @Override
-    public TopicDetailVO getTopicDetail(int tid) {
+    public TopicDetailVO getTopicDetail(int tid, int uid) {
         TopicDetailVO vo = new TopicDetailVO();
         Topic topic = baseMapper.selectById(tid);
         BeanUtils.copyProperties(topic, vo);
         TopicDetailVO.Interact interact = new TopicDetailVO.Interact(
-                checkInteract(tid, topic.getUid(), "like"),
-                checkInteract(tid, topic.getUid(), "collect")
+                checkInteract(tid, uid, "like"),
+                checkInteract(tid, uid, "collect")
         );
         vo.setInteract(interact);
         TopicDetailVO.User user = new TopicDetailVO.User();

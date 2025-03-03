@@ -40,7 +40,7 @@ public interface TopicService extends IService<Topic> {
     /**
      * 获取帖子详情
      */
-    TopicDetailVO getTopicDetail(int tid);
+    TopicDetailVO getTopicDetail(int tid, int uid);
 
 
     /**

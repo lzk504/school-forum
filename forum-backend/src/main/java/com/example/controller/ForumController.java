@@ -96,8 +96,10 @@ public class ForumController {
      * @return 包含帖子详情的RestBean对象
      */
     @GetMapping("/topic-detail")
-    public RestBean<TopicDetailVO> topicDetail(@RequestParam @Min(0) int tid) {
-        return RestBean.success(topicService.getTopicDetail(tid));
+    public RestBean<TopicDetailVO> topicDetail(@RequestParam @Min(0) int tid,
+                                               @RequestAttribute(Const.ATTR_USER_ID) int uid
+    ) {
+        return RestBean.success(topicService.getTopicDetail(tid, uid));
     }
 
     /**

@@ -6,6 +6,7 @@ export const useStore = defineStore("general", {
     state: () => {
         return {
             user: {
+                id: -1,
                 username: "",
                 email: "",
                 role: "",
@@ -25,7 +26,7 @@ export const useStore = defineStore("general", {
         }
     }, actions: {
         findTypeById(id) {
-            for (let type of this.forum.types){
+            for (let type of this.forum.types) {
                 if (type.id === id)
                     return type
             }

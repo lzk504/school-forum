@@ -3,6 +3,7 @@ package com.example.controller;
 import com.example.entity.RestBean;
 import com.example.entity.dto.Interact;
 import com.example.entity.vo.request.TopicCreateVO;
+import com.example.entity.vo.request.TopicUpdateVO;
 import com.example.entity.vo.response.*;
 import com.example.service.TopicService;
 import com.example.service.WeatherService;
@@ -130,4 +131,10 @@ public class ForumController {
         return RestBean.success(topicService.listTopicCollects(uid));
     }
 
+    @PostMapping("/update-topic")
+    public RestBean<Void> updateTopic(@RequestAttribute(Const.ATTR_USER_ID) int uid,
+                                      @Valid @RequestBody TopicUpdateVO vo
+                                      ) {
+        return RestBean.messageHandle(() -> topicService.updateTopic(uid, vo));
+    }
 }

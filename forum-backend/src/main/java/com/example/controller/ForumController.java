@@ -2,6 +2,7 @@ package com.example.controller;
 
 import com.example.entity.RestBean;
 import com.example.entity.dto.Interact;
+import com.example.entity.vo.request.AddCommentVO;
 import com.example.entity.vo.request.TopicCreateVO;
 import com.example.entity.vo.request.TopicUpdateVO;
 import com.example.entity.vo.response.*;
@@ -131,10 +132,30 @@ public class ForumController {
         return RestBean.success(topicService.listTopicCollects(uid));
     }
 
+    /**
+     * 更新帖子信息
+     *
+     * @param uid 用户ID，通过@RequestAttribute注解从请求属性中获取
+     * @param vo  包含要更新的帖子信息的话题更新对象，通过@RequestBody注解从请求体中获取，并通过@Valid注解进行校验
+     * @return 包含操作结果的RestBean对象，其中状态码和消息内容通过RestBean.messageHandle方法生成
+     */
     @PostMapping("/update-topic")
     public RestBean<Void> updateTopic(@RequestAttribute(Const.ATTR_USER_ID) int uid,
                                       @Valid @RequestBody TopicUpdateVO vo
-                                      ) {
+    ) {
         return RestBean.messageHandle(() -> topicService.updateTopic(uid, vo));
+    }
+
+    /**
+     * 添加评论
+     *
+     * @param vo  包含评论信息的评论添加对象，通过@RequestBody注解从请求体中获取，并通过@Valid注解进行校验
+     * @param uid 用户ID，通过@RequestAttribute注解从请求属性中获取
+     * @return 包含操作结果的RestBean对象，其中状态码和消息内容通过RestBean.messageHandle方法生成
+     */
+    @PostMapping("/add-comment")
+    public RestBean<Void> addComment(@Valid @RequestBody AddCommentVO vo,
+                                     @RequestAttribute(Const.ATTR_USER_ID) int uid) {
+        return RestBean.messageHandle(() -> topicService.createComment(uid, vo));
     }
 }

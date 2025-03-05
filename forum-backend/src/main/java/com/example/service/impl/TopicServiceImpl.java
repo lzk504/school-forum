@@ -7,13 +7,16 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.entity.dto.Interact;
 import com.example.entity.dto.Topic;
+import com.example.entity.dto.TopicComment;
 import com.example.entity.dto.TopicType;
+import com.example.entity.vo.request.AddCommentVO;
 import com.example.entity.vo.request.TopicCreateVO;
 import com.example.entity.vo.request.TopicUpdateVO;
 import com.example.entity.vo.response.TopicDetailVO;
 import com.example.entity.vo.response.TopicPreviewVO;
 import com.example.entity.vo.response.TopicTopVO;
 import com.example.mapper.AccountMapper;
+import com.example.mapper.TopicCommentMapper;
 import com.example.mapper.TopicMapper;
 import com.example.mapper.TopicTypeMapper;
 import com.example.service.TopicService;
@@ -51,6 +54,9 @@ public class TopicServiceImpl extends ServiceImpl<TopicMapper, Topic> implements
     @Resource
     private StringRedisTemplate template;
 
+    @Resource
+    private TopicCommentMapper topicCommentMapper;
+
 
     // 话题类型集合，用于快速检查话题类型是否存在。
     private Set<Integer> types = null;
@@ -87,7 +93,7 @@ public class TopicServiceImpl extends ServiceImpl<TopicMapper, Topic> implements
      */
     @Override
     public String createTopic(int uid, TopicCreateVO vo) {
-        if (!textLimitCheck(vo.getContent()))
+        if (!textLimitCheck(vo.getContent(), 20000))
             return "文本长度超过限制";
         if (!types.contains(vo.getType()))
             return "话题类型不存在";
@@ -112,7 +118,7 @@ public class TopicServiceImpl extends ServiceImpl<TopicMapper, Topic> implements
      */
     @Override
     public String updateTopic(int uid, TopicUpdateVO vo) {
-        if (!textLimitCheck(vo.getContent()))
+        if (!textLimitCheck(vo.getContent(), 20000))
             return "文本长度超过限制";
         if (!types.contains(vo.getType()))
             return "话题类型不存在";
@@ -123,6 +129,29 @@ public class TopicServiceImpl extends ServiceImpl<TopicMapper, Topic> implements
                 .set("content", vo.getContent().toString())
                 .set("type", vo.getType())
         );
+        return null;
+    }
+
+
+    /**
+     * 创建评论
+     *
+     * @param uid 用户ID
+     * @param vo  包含评论信息的评论添加对象
+     * @return 评论内容，如果创建失败则返回空字符串
+     */
+    @Override
+    public String createComment(int uid, AddCommentVO vo) {
+        String key = Const.FORUM_TOPIC_COMMENT_CONTENT + uid;
+        if (!flowUtils.limitPeriodCounterCheck(key, 1, 60))
+            return "发评论频率过高请稍后在试";
+        if (!textLimitCheck(vo.getContent(), 2000))
+            return "评论长度超过限制";
+        TopicComment comment = new TopicComment();
+        comment.setUid(uid);
+        BeanUtils.copyProperties(vo, comment);
+        comment.setTime(new Date());
+        topicCommentMapper.insert(comment);
         return null;
     }
 
@@ -342,13 +371,13 @@ public class TopicServiceImpl extends ServiceImpl<TopicMapper, Topic> implements
      * @param obj 包含文本信息的JSONObject对象
      * @return 如果文本长度未超过限制，则返回true；否则返回false
      */
-    private boolean textLimitCheck(JSONObject obj) {
+    private boolean textLimitCheck(JSONObject obj, int limit) {
         if (obj == null) return false;
         long length = 0;
         for (Object o : obj.getJSONArray("ops")) {
             length += JSONObject.from(o).getString("insert").length();
-            if (length > 20000)
-                return false;
+            if (length > limit) return false;
+            return false;
         }
         return true;
     }

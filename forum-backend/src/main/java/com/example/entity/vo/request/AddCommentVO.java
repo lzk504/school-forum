@@ -1,6 +1,5 @@
 package com.example.entity.vo.request;
 
-import com.alibaba.fastjson2.JSONObject;
 import jakarta.validation.constraints.Min;
 import lombok.Data;
 
@@ -8,7 +7,7 @@ import lombok.Data;
 public class AddCommentVO {
     @Min(1)
     int tid;
-    JSONObject content;
+    String content;
     @Min(-1)
     int uid;
 }

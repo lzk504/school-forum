@@ -4,7 +4,7 @@ import {computed, reactive, ref} from "vue";
 import '@vueup/vue-quill/dist/vue-quill.snow.css';
 import {Check} from "@element-plus/icons";
 import axios from "axios";
-import {accessHeader, get, post} from "@/net";
+import {accessHeader, post} from "@/net";
 import {ElMessage} from "element-plus";
 import {Delta, Quill, QuillEditor} from "@vueup/vue-quill";
 import ImageResize from "quill-image-resize-vue";
@@ -240,23 +240,5 @@ const editorOption = {
     margin: 0;
 }
 
-:deep(.ql-toolbar) {
-    border-radius: 5px 5px 0 0;
-    border-color: var(--el-border-color);
-}
-
-:deep(.ql-container) {
-    border-radius: 0 0 5px 5px;
-    border-color: var(--el-border-color);
-}
-
-:deep(.ql-editor.ql-blank::before) {
-    color: var(--el-text-color-placeholder);
-    font-style: normal;
-}
-
-:deep(.ql-editor) {
-    font-size: 14px;
-}
 
 </style>

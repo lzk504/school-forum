@@ -142,11 +142,11 @@ public class TopicServiceImpl extends ServiceImpl<TopicMapper, Topic> implements
      */
     @Override
     public String createComment(int uid, AddCommentVO vo) {
+        if (!textLimitCheck(JSONObject.parseObject(vo.getContent()), 2000))
+            return "评论内容太多，发表失败！";
         String key = Const.FORUM_TOPIC_COMMENT_CONTENT + uid;
         if (!flowUtils.limitPeriodCounterCheck(key, 1, 60))
             return "发评论频率过高请稍后在试";
-        if (!textLimitCheck(vo.getContent(), 2000))
-            return "评论长度超过限制";
         TopicComment comment = new TopicComment();
         comment.setUid(uid);
         BeanUtils.copyProperties(vo, comment);
@@ -377,7 +377,6 @@ public class TopicServiceImpl extends ServiceImpl<TopicMapper, Topic> implements
         for (Object o : obj.getJSONArray("ops")) {
             length += JSONObject.from(o).getString("insert").length();
             if (length > limit) return false;
-            return false;
         }
         return true;
     }

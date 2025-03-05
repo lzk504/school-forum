@@ -4,7 +4,7 @@ import {useRoute} from "vue-router";
 import {get, post} from "@/net";
 import axios from "axios";
 import {computed, reactive, ref} from "vue";
-import {Female, ArrowLeft, Male, CircleCheck, Star, EditPen} from "@element-plus/icons-vue";
+import {ArrowLeft, CircleCheck, EditPen, Female, Male, Plus, Star} from "@element-plus/icons-vue";
 import {QuillDeltaToHtmlConverter} from 'quill-delta-to-html';
 import Card from "@/components/Card.vue";
 import router from "@/router";
@@ -13,6 +13,7 @@ import InteractButton from "@/components/InteractButton.vue";
 import {ElMessage} from "element-plus";
 import {useStore} from "@/store";
 import TopicEditor from "@/components/TopicEditor.vue";
+import TopicCommentEditor from "@/components/TopicCommentEditor.vue";
 
 const route = useRoute()
 const store = useStore()
@@ -29,6 +30,12 @@ const topic = reactive({
 
 
 const edit = ref(false)
+
+const comment = reactive({
+    show: false,
+    text: '',
+    quote: -1
+})
 
 // 获取帖子详情
 const init = () => get(`/api/forum/topic-detail?tid=${tid}`, data => {
@@ -115,9 +122,11 @@ function updateTopic(editor) {
             </div>
             <div class="topic-main-right">
                 <div class="topic-content" v-html="content"></div>
+                <el-divider style="margin: 10px 0"/>
                 <div style="font-size: 13px;color: grey;text-align: center">
                     <div>发帖时间: {{new Date(topic.data.time).toLocaleString()}}</div>
                 </div>
+
                 <div style="text-align: right;margin-top:30px">
                     <div style="text-align: right;margin-top: 30px">
                         <interact-button name="编辑帖子" color="dodgerblue" :check="false"
@@ -148,13 +157,39 @@ function updateTopic(editor) {
         <topic-editor :show="edit" @close="edit = false" v-if="topic.data && store.forum.types"
                       :default-type="topic.data.type" :default-text="topic.data.content"
                       :default-title="topic.data.title" submit-button="更新帖子内容" :submit="updateTopic"/>
-        <div class="topic-comments">
-
+        <topic-comment-editor :quote="comment.quote" :show="comment.show"
+                              :tid="tid"
+                              @close="comment.show = false"/>
+        <div class="topic-comments" @click="comment.show=true">
+            <el-icon>
+                <Plus/>
+            </el-icon>
         </div>
     </div>
 </template>
 
 <style scoped lang="less">
+.topic-comments {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    font-size: 18px;
+    font-weight: bold;
+    color: var(--el-color-primary);
+    text-align: center;
+    line-height: 45px;
+    background: var(--el-bg-color-overlay);
+    box-shadow: var(--el-box-shadow-lighter);
+
+    &:hover {
+        background: var(--el-border-color-extra-light);
+        cursor: pointer;
+        opacity: 0.6;
+    }
+}
 
 .topic-header {
     position: sticky;
@@ -194,14 +229,14 @@ function updateTopic(editor) {
     }
 
     .topic-main-right {
-        width: 600px;
+        width: 100%;
         padding: 10px 20px;
         display: flex;
         flex-direction: column;
 
         .topic-content {
             font-size: 14px;
-            line-height: 22px;
+            line-height: 25px;
             opacity: 0.8;
         }
     }

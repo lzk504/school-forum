@@ -58,7 +58,7 @@ public class ForumController {
     /**
      * 创建帖子
      *
-     * @param vo  包含话题创建信息的视图对象
+     * @param vo  包含帖子创建信息的视图对象
      * @param uid 用户ID，通过请求属性获取
      * @return 包含操作结果的RestBean对象，如果成功则无内容，如果失败则包含错误消息
      */
@@ -69,11 +69,11 @@ public class ForumController {
     }
 
     /**
-     * 获取话题列表
+     * 获取帖子列表
      *
-     * @param page 页码，从0开始
-     * @param type 类型，从0开始
-     * @return 包含话题列表的RestBean对象
+     * @param page 页码，从1开始
+     * @param type 类型，从1开始
+     * @return 包含帖子列表的RestBean对象
      */
     @GetMapping("/list-topic")
     public RestBean<List<TopicPreviewVO>> listTopic(@RequestParam @Min(0) int page,
@@ -105,7 +105,7 @@ public class ForumController {
     }
 
     /**
-     * 处理用户与话题的互动操作
+     * 处理用户与帖子的互动操作
      *
      * @param tid   帖子ID，必须为非负整数
      * @param type  互动类型，只能是"like"或"collect"
@@ -157,5 +157,19 @@ public class ForumController {
     public RestBean<Void> addComment(@Valid @RequestBody AddCommentVO vo,
                                      @RequestAttribute(Const.ATTR_USER_ID) int uid) {
         return RestBean.messageHandle(() -> topicService.createComment(uid, vo));
+    }
+
+    /**
+     * 获取指定帖子的评论列表
+     *
+     * @param tid  帖子D，通过@RequestParam注解从请求参数中获取，且该参数的值必须大于等于0
+     * @param page 页码，通过@RequestParam注解从请求参数中获取，且该参数的值必须大于等于0
+     * @return 包含指定帖子的评论列表的RestBean对象，其中状态码为200表示成功，数据部分包含评论列表
+     */
+    @GetMapping("/comments")
+    public RestBean<List<CommentVO>> comments(@RequestParam @Min(0) int tid,
+                                              @RequestParam @Min(0) int page
+    ) {
+        return RestBean.success(topicService.listCommentsByPage(tid, page + 1));
     }
 }

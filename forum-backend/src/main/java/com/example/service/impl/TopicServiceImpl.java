@@ -12,6 +12,7 @@ import com.example.entity.dto.TopicType;
 import com.example.entity.vo.request.AddCommentVO;
 import com.example.entity.vo.request.TopicCreateVO;
 import com.example.entity.vo.request.TopicUpdateVO;
+import com.example.entity.vo.response.CommentVO;
 import com.example.entity.vo.response.TopicDetailVO;
 import com.example.entity.vo.response.TopicPreviewVO;
 import com.example.entity.vo.response.TopicTopVO;
@@ -34,6 +35,7 @@ import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 @Service
@@ -56,6 +58,9 @@ public class TopicServiceImpl extends ServiceImpl<TopicMapper, Topic> implements
 
     @Resource
     private TopicCommentMapper topicCommentMapper;
+
+    @Resource
+    private TopicCommentMapper commentMapper;
 
 
     // 话题类型集合，用于快速检查话题类型是否存在。
@@ -155,6 +160,38 @@ public class TopicServiceImpl extends ServiceImpl<TopicMapper, Topic> implements
         return null;
     }
 
+
+    /**
+     * 按页获取指定帖子的评论列表
+     *
+     * @param tid        话题ID
+     * @param pageNumber 页码
+     * @return 包含指定话题的评论列表的CommentVO对象列表
+     */
+    @Override
+    public List<CommentVO> listCommentsByPage(int tid, int pageNumber) {
+        Page<TopicComment> page = Page.of(pageNumber, 10);
+        topicCommentMapper.selectPage(page, Wrappers.<TopicComment>query()
+                .eq("tid", tid));
+        return page.getRecords().stream().map(dto -> {
+            CommentVO vo = new CommentVO();
+            BeanUtils.copyProperties(dto, vo);
+            if (dto.getQuote() > 0) {
+                JSONObject object = JSONObject.parseObject(topicCommentMapper.
+                        selectOne(Wrappers.<TopicComment>query().
+                                eq("id", dto.getId()).orderByAsc("time")).getContent());
+                StringBuilder builder = new StringBuilder();
+                this.shortContent(object.getJSONArray("ops"), builder, ignore -> {
+                });
+                vo.setQuote(builder.toString());
+            }
+            CommentVO.User user = new CommentVO.User();
+            commonUtils.fillUserDetailsByPrivacy(user, dto.getUid());
+            vo.setUser(user);
+            return vo;
+        }).toList();
+    }
+
     /**
      * 按页获取话题列表
      * <p>
@@ -215,6 +252,8 @@ public class TopicServiceImpl extends ServiceImpl<TopicMapper, Topic> implements
         vo.setInteract(interact);
         TopicDetailVO.User user = new TopicDetailVO.User();
         vo.setUser(commonUtils.fillUserDetailsByPrivacy(user, topic.getUid()));
+        vo.setComments(commentMapper.
+                selectCount(Wrappers.<TopicComment>query().eq("tid", tid)));
         return vo;
     }
 
@@ -349,20 +388,30 @@ public class TopicServiceImpl extends ServiceImpl<TopicMapper, Topic> implements
         List<String> images = new ArrayList<>();
         StringBuilder previewText = new StringBuilder();
         JSONArray ops = JSONObject.parseObject(topic.getContent()).getJSONArray("ops");
+        this.shortContent(ops, previewText, obj -> images.add(obj.toString()));
+        vo.setText(previewText.length() > 300 ? previewText.substring(0, 300) : previewText.toString());
+        vo.setImages(images);
+        return vo;
+    }
+
+
+    /**
+     * 生成短内容预览
+     *
+     * @param ops          操作数组，包含要生成预览的文本和图片信息
+     * @param previewText  用于存储生成的预览文本的StringBuilder对象
+     * @param imageHandler 用于处理图片信息的Consumer接口实现
+     */
+    private void shortContent(JSONArray ops, StringBuilder previewText, Consumer<Object> imageHandler) {
         for (Object o : ops) {
             Object insert = JSONObject.from(o).get("insert");
             if (insert instanceof String text) {
                 if (previewText.length() >= 300) continue;
                 previewText.append(text);
             } else if (insert instanceof Map<?, ?> map) {
-                Optional.ofNullable(map.get("image"))
-                        .ifPresent(obj -> images.add(obj.toString()));
+                Optional.ofNullable(map.get("image")).ifPresent(imageHandler);
             }
         }
-        vo.setText(previewText.length() > 300 ? previewText.substring(0, 300) : previewText.toString());
-        vo.setImages(images);
-        return vo;
-
     }
 
     /**

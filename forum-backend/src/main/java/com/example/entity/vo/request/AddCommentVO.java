@@ -9,5 +9,5 @@ public class AddCommentVO {
     int tid;
     String content;
     @Min(-1)
-    int uid;
+    int quote;
 }

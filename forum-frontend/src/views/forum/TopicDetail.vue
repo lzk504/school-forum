@@ -3,7 +3,7 @@
 import {useRoute} from "vue-router";
 import {get, post} from "@/net";
 import axios from "axios";
-import {computed, reactive, ref} from "vue";
+import {reactive, ref} from "vue";
 import {ArrowLeft, CircleCheck, EditPen, Female, Male, Plus, Star} from "@element-plus/icons-vue";
 import {QuillDeltaToHtmlConverter} from 'quill-delta-to-html';
 import Card from "@/components/Card.vue";
@@ -25,7 +25,8 @@ const topic = reactive({
     data: null,
     like: false,
     collect: false,
-    comments: [],
+    comments: null,
+    page: 1
 })
 
 
@@ -42,16 +43,18 @@ const init = () => get(`/api/forum/topic-detail?tid=${tid}`, data => {
     topic.data = data
     topic.like = data.interact.like
     topic.collect = data.interact.collect
+    loadComments(1)
 })
 
 init()
 
 //帖子内容富文本
-const content = computed(() => {
-    const ops = JSON.parse(topic.data.content).ops
+function convertToHtml(content) {
+    const ops = JSON.parse(content).ops
     const converter = new QuillDeltaToHtmlConverter(ops, {inlineStyles: true});
     return converter.convert();
-})
+}
+
 
 // 点赞和收藏
 function interact(type, message) {
@@ -76,6 +79,19 @@ function updateTopic(editor) {
         edit.value = false;
         init()
     })
+}
+
+// 加载评论
+function loadComments(page) {
+    topic.comments = null
+    topic.page = page
+    get(`api/forum/comments?tid=${tid}&page=${page - 1}`, data => topic.comments = data)
+}
+
+// 添加评论
+function onCommentAdd() {
+    comment.show = false
+    loadComments(Math.floor(++topic.data.comments / 10) + 1)
 }
 </script>
 
@@ -121,7 +137,7 @@ function updateTopic(editor) {
                 </div>
             </div>
             <div class="topic-main-right">
-                <div class="topic-content" v-html="content"></div>
+                <div class="topic-content" v-html="convertToHtml(topic.data.content)"></div>
                 <el-divider style="margin: 10px 0"/>
                 <div style="font-size: 13px;color: grey;text-align: center">
                     <div>发帖时间: {{new Date(topic.data.time).toLocaleString()}}</div>
@@ -154,12 +170,54 @@ function updateTopic(editor) {
                 </div>
             </div>
         </div>
+        <transition mode="out-in" name="el-fade-linear">
+            <div v-if="topic.comments">
+                <div v-for="item in topic.comments" class="topic-main" style="margin-top: 10px">
+                    <div class="topic-main-left">
+                        <el-avatar :size="50" :src="axios.defaults.baseURL + '/images' + item.user.avatar"/>
+                        <div>
+                            <div style="font-size: 18px;font-weight: bold">
+                                {{item.user.username}}
+                                <span v-if="item.user.gender === 1" style="color:hotpink">
+              <el-icon><Female/></el-icon>
+            </span>
+                                <span v-if="item.user.gender === 0" style="color:blue">
+              <el-icon><Male/></el-icon>
+            </span>
+                            </div>
+                            <div class="desc">
+                                {{item.user.email}}
+                            </div>
+                            <el-divider style="margin: 10px 0"/>
+                            <div style="text-align: center">
+                                <div v-if="item.user.wx" class="desc">微信:{{item.user.wx}}</div>
+                                <div v-if="item.user.qq" class="desc">QQ:{{item.user.qq}}</div>
+                                <div v-if="item.user.phone" class="desc">手机:{{item.user.phone}}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="topic-main-right">
+                        <div style="font-size: 13px;color: grey;text-align: left">
+                            <div>评论时间: {{new Date(item.time).toLocaleString()}}</div>
+                        </div>
+                        <div class="topic-content" v-html="convertToHtml(item.content)"></div>
+                    </div>
+                </div>
+                <div style="width: fit-content;margin: 20px auto">
+                    <el-pagination v-model:current-page="topic.page" :page-size="10" :total="topic.data.comments"
+                                   background
+                                   hide-on-single-page layout="prev, pager, next" @current-change="loadComments">
+
+                    </el-pagination>
+                </div>
+            </div>
+        </transition>
         <topic-editor :show="edit" @close="edit = false" v-if="topic.data && store.forum.types"
                       :default-type="topic.data.type" :default-text="topic.data.content"
                       :default-title="topic.data.title" submit-button="更新帖子内容" :submit="updateTopic"/>
         <topic-comment-editor :quote="comment.quote" :show="comment.show"
                               :tid="tid"
-                              @close="comment.show = false"/>
+                              @close="comment.show = false" @comment="onCommentAdd"/>
         <div class="topic-comments" @click="comment.show=true">
             <el-icon>
                 <Plus/>

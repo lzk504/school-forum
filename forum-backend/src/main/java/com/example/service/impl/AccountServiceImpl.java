@@ -3,8 +3,12 @@ package com.example.service.impl;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.entity.dto.Account;
+import com.example.entity.dto.AccountDetails;
+import com.example.entity.dto.AccountPrivacy;
 import com.example.entity.vo.request.*;
+import com.example.mapper.AccountDetailsMapper;
 import com.example.mapper.AccountMapper;
+import com.example.mapper.AccountPrivacyMapper;
 import com.example.service.AccountService;
 import com.example.utils.Const;
 import com.example.utils.FlowUtils;
@@ -41,6 +45,12 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, Account> impl
 
     @Resource
     PasswordEncoder passwordEncoder;
+
+    @Resource
+    private AccountPrivacyMapper privacyMapper;
+
+    @Resource
+    private AccountDetailsMapper detailsMapper;
 
     @Resource
     FlowUtils flow;
@@ -102,11 +112,15 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, Account> impl
         if (this.existsAccountByUsername(username)) return "该用户名已被他人使用，请重新更换";
         String password = passwordEncoder.encode(info.getPassword());
         Account account = new Account(null, info.getUsername(),
-                password, email, Const.ROLE_DEFAULT, null,new Date());
+                password, email, Const.ROLE_DEFAULT, null, new Date());
         if (!this.save(account)) {
             return "内部错误，注册失败";
         } else {
             this.deleteEmailVerifyCode(email);
+            privacyMapper.insert(new AccountPrivacy(account.getId()));
+            AccountDetails details = new AccountDetails();
+            details.setId(account.getId());
+            detailsMapper.insert(details);
             return null;
         }
     }
@@ -179,7 +193,7 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, Account> impl
     @Override
     public String changePassword(int id, ChangePasswordVO vo) {
         String password = this.query().eq("id", id).one().getPassword();
-        if(!passwordEncoder.matches(vo.getOld_password(), password))
+        if (!passwordEncoder.matches(vo.getOld_password(), password))
             return "原密码错误，请重新输入！";
         boolean success = this.update()
                 .eq("id", id)

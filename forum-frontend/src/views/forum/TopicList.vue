@@ -10,15 +10,14 @@ import {
     Edit,
     EditPen,
     Link,
-    Picture,
-    Microphone
+    Microphone,
+    Picture
 } from "@element-plus/icons-vue";
 import WeatherInfo from "@/components/WeatherInfo.vue";
 import {computed, reactive, ref, watch} from "vue";
 import {get} from "@/net";
 import TopicEditor from "@/components/TopicEditor.vue";
 import {useStore} from "@/store";
-import axios from "axios";
 import ColorDot from "@/components/ColorDot.vue";
 import router from "@/router";
 import TopicTag from "@/components/TopicTag.vue";
@@ -165,7 +164,7 @@ navigator.geolocation.getCurrentPosition((position) => {
                                     @click="router.push('/index/topic-detail/'+item.id)">
                             <div style="display: flex">
                                 <div>
-                                    <el-avatar :size="30" :src="`${axios.defaults.baseURL}/images${item.avatar}`"/>
+                                    <el-avatar :size="30" :src="store.avatarUserUrl(item.avatar)"/>
                                 </div>
                                 <div style="margin-left: 7px;transform: translate(-2px)">
                                     <div style="font-size: 13px;font-weight: bold">{{item.username}}</div>

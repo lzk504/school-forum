@@ -2,7 +2,6 @@
 
 import {useRoute} from "vue-router";
 import {get, post} from "@/net";
-import axios from "axios";
 import {reactive, ref} from "vue";
 import {ArrowLeft, CircleCheck, EditPen, Female, Male, Plus, Star} from "@element-plus/icons-vue";
 import {QuillDeltaToHtmlConverter} from 'quill-delta-to-html';
@@ -119,7 +118,7 @@ function deleteComment(id) {
         </div>
         <div class="topic-main" v-if="topic.data">
             <div class="topic-main-left">
-                <el-avatar :src="axios.defaults.baseURL + '/images' + topic.data.user.avatar" :size="50"/>
+                <el-avatar :size="50" :src="store.avatarUserUrl(topic.data.user.avatar)"/>
                 <div>
                     <div style="font-size: 18px;font-weight: bold">
                         {{topic.data.user.username}}
@@ -183,7 +182,7 @@ function deleteComment(id) {
             <div v-if="topic.comments">
                 <div v-for="item in topic.comments" class="topic-main" style="margin-top: 10px">
                     <div class="topic-main-left">
-                        <el-avatar :size="50" :src="axios.defaults.baseURL + '/images' + item.user.avatar"/>
+                        <el-avatar :size="50" :src="store.avatarUserUrl(item.user.avatar) "/>
                         <div>
                             <div style="font-size: 18px;font-weight: bold">
                                 {{item.user.username}}

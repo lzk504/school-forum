@@ -14,6 +14,7 @@ import {ElMessage} from "element-plus";
 import {useStore} from "@/store";
 import TopicEditor from "@/components/TopicEditor.vue";
 import TopicCommentEditor from "@/components/TopicCommentEditor.vue";
+import {ChatSquare, Delete} from "@element-plus/icons";
 
 const route = useRoute()
 const store = useStore()
@@ -35,7 +36,7 @@ const edit = ref(false)
 const comment = reactive({
     show: false,
     text: '',
-    quote: -1
+    quote: null
 })
 
 // 获取帖子详情
@@ -92,6 +93,14 @@ function loadComments(page) {
 function onCommentAdd() {
     comment.show = false
     loadComments(Math.floor(++topic.data.comments / 10) + 1)
+}
+
+// 删除评论
+function deleteComment(id) {
+    get(`/api/forum/delete-comment?id=${id}`, () => {
+        ElMessage.success('删除评论成功')
+        loadComments(topic.page)
+    })
 }
 </script>
 
@@ -200,7 +209,19 @@ function onCommentAdd() {
                         <div style="font-size: 13px;color: grey;text-align: left">
                             <div>评论时间: {{new Date(item.time).toLocaleString()}}</div>
                         </div>
+                        <div v-if="item.quote" class="comment-quote">
+                            回复{{item.quote}}
+                        </div>
                         <div class="topic-content" v-html="convertToHtml(item.content)"></div>
+                        <div style="text-align: right">
+                            <el-link :icon="ChatSquare" type="info" @click="comment.show=true;comment.quote=item">
+                                &nbsp回复评论
+                            </el-link>
+                            <el-link v-if="item.user.id === store.user.id" :icon="Delete" style="margin-left: 20px"
+                                     type="danger" @click="deleteComment(item.id)">
+                                &nbsp删除评论
+                            </el-link>
+                        </div>
                     </div>
                 </div>
                 <div style="width: fit-content;margin: 20px auto">
@@ -218,7 +239,7 @@ function onCommentAdd() {
         <topic-comment-editor :quote="comment.quote" :show="comment.show"
                               :tid="tid"
                               @close="comment.show = false" @comment="onCommentAdd"/>
-        <div class="topic-comments" @click="comment.show=true">
+        <div class="topic-comments" @click="comment.show = true;comment.quote = null">
             <el-icon>
                 <Plus/>
             </el-icon>
@@ -227,6 +248,15 @@ function onCommentAdd() {
 </template>
 
 <style scoped lang="less">
+.comment-quote {
+    font-size: 13px;
+    color: grey;
+    background-color: rgba(94, 94, 94, 0.1);
+    padding: 10px;
+    margin-top: 10px;
+    border-radius: 5px;
+}
+
 .topic-comments {
     position: fixed;
     bottom: 20px;

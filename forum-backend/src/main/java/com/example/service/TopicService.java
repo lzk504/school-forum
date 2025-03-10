@@ -72,4 +72,11 @@ public interface TopicService extends IService<Topic> {
      * 获取指定话题的评论列表
      */
     List<CommentVO> listCommentsByPage(int tid, int pageNumber);
+
+
+    /**
+     * 删除指定话题的指定用户的评论
+     */
+    void deleteComment(int id, int uid);
 }
+

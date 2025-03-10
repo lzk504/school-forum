@@ -172,4 +172,18 @@ public class ForumController {
     ) {
         return RestBean.success(topicService.listCommentsByPage(tid, page + 1));
     }
+
+    /**
+     * 删除评论
+     *
+     * @param id  评论ID，通过@RequestParam注解从请求参数中获取，且该参数的值必须大于等于0
+     * @param uid 用户ID，通过@RequestAttribute注解从请求属性中获取
+     * @return 包含操作结果的RestBean对象，其中状态码为200表示成功
+     */
+    @GetMapping("/delete-comment")
+    public RestBean<Void> deleteComment(@RequestParam @Min(0) int id, @RequestAttribute(Const.ATTR_USER_ID) int uid) {
+        topicService.deleteComment(id, uid);
+        return RestBean.success();
+    }
+
 }

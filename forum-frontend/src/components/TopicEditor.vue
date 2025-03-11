@@ -224,7 +224,6 @@ const editorOption = {
                 </div>
             </div>
         </el-drawer>
-
     </div>
 </template>
 

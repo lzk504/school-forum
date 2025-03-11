@@ -365,6 +365,7 @@ navigator.geolocation.getCurrentPosition((position) => {
     margin: 20px auto;
     gap: 20px;
     max-width: 800px;
+    padding: 0 20px;
 
     .create-topic {
         background-color: #efefef;

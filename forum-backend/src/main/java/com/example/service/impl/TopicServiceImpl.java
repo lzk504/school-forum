@@ -5,10 +5,7 @@ import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.example.entity.dto.Interact;
-import com.example.entity.dto.Topic;
-import com.example.entity.dto.TopicComment;
-import com.example.entity.dto.TopicType;
+import com.example.entity.dto.*;
 import com.example.entity.vo.request.AddCommentVO;
 import com.example.entity.vo.request.TopicCreateVO;
 import com.example.entity.vo.request.TopicUpdateVO;
@@ -20,6 +17,7 @@ import com.example.mapper.AccountMapper;
 import com.example.mapper.TopicCommentMapper;
 import com.example.mapper.TopicMapper;
 import com.example.mapper.TopicTypeMapper;
+import com.example.service.NotificationService;
 import com.example.service.TopicService;
 import com.example.utils.CacheUtils;
 import com.example.utils.CommonUtils;
@@ -61,6 +59,9 @@ public class TopicServiceImpl extends ServiceImpl<TopicMapper, Topic> implements
 
     @Resource
     private TopicCommentMapper commentMapper;
+
+    @Resource
+    private NotificationService notificationService;
 
 
     // 话题类型集合，用于快速检查话题类型是否存在。
@@ -157,6 +158,26 @@ public class TopicServiceImpl extends ServiceImpl<TopicMapper, Topic> implements
         BeanUtils.copyProperties(vo, comment);
         comment.setTime(new Date());
         topicCommentMapper.insert(comment);
+        Topic topic = this.getById(vo.getTid());
+        Account account = accountMapper.selectById(uid);
+        if (vo.getQuote() > 0) {
+            TopicComment topicComment = commentMapper.selectById(vo.getQuote());
+            if (!Objects.equals(account.getId(), topicComment.getUid())) {
+                notificationService.addNotification(
+                        topicComment.getUid(),
+                        "您有新的帖子评论回复",
+                        account.getUsername() + " 回复了你发表的评论，快去看看吧！",
+                        "success", "/index/topic-detail/" + topicComment.getTid()
+                );
+            }
+        } else if (!Objects.equals(account.getId(), topic.getUid())) {
+            notificationService.addNotification(
+                    topic.getUid(),
+                    "您有新的帖子回复",
+                    account.getUsername() + " 回复了你发表主题: " + topic.getTitle() + "，快去看看吧！",
+                    "success", "/index/topic-detail/" + topic.getId()
+            );
+        }
         return null;
     }
 

@@ -1,7 +1,6 @@
 <script setup>
 import {get, logout} from "@/net";
-import {reactive, ref} from "vue";
-import {useStore} from "@/store";
+import {inject, reactive, ref} from "vue";
 import {
     Bell,
     ChatDotSquare,
@@ -50,8 +49,8 @@ const userMenu = [
     }
 ]
 
-const store = useStore()
-const loading = ref(true)
+
+const loading = inject('userLoading')
 
 const searchInput = reactive({
     type: '1',
@@ -60,10 +59,6 @@ const searchInput = reactive({
 
 const notification = ref([])
 
-get('/api/user/info', (res) => {
-    store.user = res
-    loading.value = false
-})
 
 // 加载通知
 const loadNotification =

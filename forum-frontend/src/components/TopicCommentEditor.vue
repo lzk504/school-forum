@@ -2,8 +2,8 @@
 import {Delta, QuillEditor} from "@vueup/vue-quill";
 import "@vueup/vue-quill/dist/vue-quill.snow.css";
 import {ref} from "vue";
-import {post} from "@/net";
 import {ElMessage} from "element-plus";
+import {apiForumCommentAdd} from "@/net/api/forum";
 
 const props = defineProps({
     show: Boolean,
@@ -22,7 +22,7 @@ function submitComment() {
     if (deltaToText(content).length > 2000) {
         ElMessage.error('评论字数不能超过2000')
     }
-    post('/api/forum/add-comment', {
+    apiForumCommentAdd({
         tid: props.tid,
         quote: props.quote ? props.quote.id : -1,
         content: JSON.stringify(content.value),

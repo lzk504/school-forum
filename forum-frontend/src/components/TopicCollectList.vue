@@ -1,9 +1,10 @@
 <script setup>
-import {get} from "@/net";
 import {ref} from "vue";
 import LightCard from "@/components/LightCard.vue";
 import router from "@/router";
 import TopicTag from "@/components/TopicTag.vue";
+import {apiForumCollectDelete, apiForumCollects} from "@/net/api/forum";
+import {ElMessage} from "element-plus";
 
 defineProps({
     show: false,
@@ -15,12 +16,12 @@ const list = ref([])
 
 // 初始化收藏帖子数据
 function init() {
-    get('/api/forum/collects', data => list.value = data)
+    apiForumCollects(data => list.value = data)
 }
 
 // 删除帖子收藏
 function deleteCollect(index, tid) {
-    get(`/api/forum/interact?tid=${tid}&type=collect&state=false`, () => {
+    apiForumCollectDelete(tid, () => {
         ElMessage.success('删除帖子收藏成功')
         list.value.splice(index, 1)
     })

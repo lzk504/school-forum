@@ -1,5 +1,5 @@
 <script setup>
-import {get, logout} from "@/net";
+import {logout} from "@/net";
 import {inject, reactive, ref} from "vue";
 import {
     Bell,
@@ -23,6 +23,7 @@ import router from "@/router";
 import LightCard from "@/components/LightCard.vue";
 import {Check} from "@element-plus/icons";
 import UserInfo from "@/components/UserInfo.vue";
+import {apiNotificationDelete, apiNotificationDeleteAll, apiNotificationList} from "@/net/api/user";
 
 const userMenu = [
     {
@@ -62,17 +63,17 @@ const notification = ref([])
 
 // 加载通知
 const loadNotification =
-        () => get('/api/notification/list', data => notification.value = data)
+        () => apiNotificationList(data => notification.value = data)
 loadNotification()
 
 // 删除所有通知
 function deleteAllNotification() {
-    get('/api/notification/delete-all', () => loadNotification())
+    apiNotificationDeleteAll(() => loadNotification())
 }
 
 // 确认通知并跳转
 function confirmNotification(id, url) {
-    get(`/api/notification/delete?id=${id}`, () => {
+    apiNotificationDelete(id, () => {
         loadNotification()
         window.open(url)
     })

@@ -14,14 +14,14 @@ import {
     Picture
 } from "@element-plus/icons-vue";
 import WeatherInfo from "@/components/WeatherInfo.vue";
-import {computed, reactive, ref, watch} from "vue";
-import {get} from "@/net";
+import {computed, onMounted, reactive, ref, watch} from "vue";
 import TopicEditor from "@/components/TopicEditor.vue";
 import {useStore} from "@/store";
 import ColorDot from "@/components/ColorDot.vue";
 import router from "@/router";
 import TopicTag from "@/components/TopicTag.vue";
 import TopicCollectList from "@/components/TopicCollectList.vue";
+import {apiForumTopicList, apiForumTopicTopList, apiForumWeather} from "@/net/api/forum";
 
 //发帖编辑器
 const editor = ref(false)
@@ -40,16 +40,13 @@ const topics = reactive({
 const collects = ref(false)
 
 // 监听板块类型变化，重新获取帖子列表数据
-
 watch(() => topics.type, () => resetList(), {immediate: true})
-
-get('/api/forum/top-topic', data => topics.top = data)
 
 
 // 获取帖子列表数据
 function updateList() {
     if (topics.end) return
-    get(`/api/forum/list-topic?page=${topics.page}&type=${topics.type}`, data => {
+    apiForumTopicList(topics.page, topics.type, data => {
         if (data) {
             data.forEach(d => topics.list.push(d))
             topics.page++
@@ -89,24 +86,26 @@ const weather = reactive({
 
 // 获取天气信息
 navigator.geolocation.getCurrentPosition((position) => {
-            const longitude = position.coords.longitude;
-            const latitude = position.coords.latitude;
-            get(`/api/forum/weather?longitude=${longitude}&latitude=${latitude}`, data => {
-                Object.assign(weather, data)
-                weather.success = true
-            })
-        }, error => {
-            console.warn(error + '位置信息获取超时,请检查网络设置')
-            get(`/api/forum/weather?longitude=116.40529&latitude=39.90499`, data => {
-                Object.assign(weather, data)
-                weather.success = true
-            })
-        }, {
-            timeout: 3000,
-            enableHighAccuracy: true,
-        }
-)
+    const longitude = position.coords.longitude;
+    const latitude = position.coords.latitude;
+    apiForumWeather(longitude, latitude, data => {
+        Object.assign(weather, data)
+        weather.success = true
+    })
+}, error => {
+    console.warn(error + '位置信息获取超时,请检查网络设置')
+    apiForumWeather(116.40529, 39.90499, data => {
+        Object.assign(weather, data)
+        weather.success = true
+    })
+}, {
+    timeout: 3000,
+    enableHighAccuracy: true,
+})
 
+onMounted(() => {
+    apiForumTopicTopList(data => topics.top = data)
+})
 
 </script>
 

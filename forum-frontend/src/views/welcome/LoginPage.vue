@@ -54,7 +54,7 @@ import {Lock, User} from '@element-plus/icons-vue'
 import router from "@/router";
 import {inject, reactive, ref} from "vue";
 import {login} from '@/net'
-import {getUserInfo} from "@/net/api/user";
+import {apiUserInfo} from "@/net/api/user";
 
 const formRef = ref()
 const form = reactive({
@@ -78,7 +78,7 @@ function userLogin() {
     formRef.value.validate((isValid) => {
         if (isValid) {
             login(form.username, form.password, form.remember, () => {
-                getUserInfo(loading)
+                apiUserInfo(loading)
                 router.push("/index")
 
             })

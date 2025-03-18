@@ -1,7 +1,6 @@
 <script setup>
 
 import {useRoute} from "vue-router";
-import {get, post} from "@/net";
 import {reactive, ref} from "vue";
 import {ArrowLeft, CircleCheck, EditPen, Female, Male, Plus, Star} from "@element-plus/icons-vue";
 import {QuillDeltaToHtmlConverter} from 'quill-delta-to-html';
@@ -14,6 +13,13 @@ import {useStore} from "@/store";
 import TopicEditor from "@/components/TopicEditor.vue";
 import TopicCommentEditor from "@/components/TopicCommentEditor.vue";
 import {ChatSquare, Delete} from "@element-plus/icons";
+import {
+    apiForumCommentDelete,
+    apiForumComments,
+    apiForumInteract,
+    apiForumTopic,
+    apiForumTopicUpdate
+} from "@/net/api/forum";
 
 const route = useRoute()
 const store = useStore()
@@ -39,7 +45,7 @@ const comment = reactive({
 })
 
 // 获取帖子详情
-const init = () => get(`/api/forum/topic-detail?tid=${tid}`, data => {
+const init = () => apiForumTopic(tid, data => {
     topic.data = data
     topic.like = data.interact.like
     topic.collect = data.interact.collect
@@ -58,18 +64,12 @@ function convertToHtml(content) {
 
 // 点赞和收藏
 function interact(type, message) {
-    get(`/api/forum/interact?tid=${tid}&type=${type}&state=${!topic[type]}`, () => {
-        topic[type] = !topic[type]
-        if (topic[type])
-            ElMessage.success(`${message}成功！`)
-        else
-            ElMessage.success(`已取消${message}！`)
-    })
+    apiForumInteract(tid, type, topic, message)
 }
 
 //更新帖子内容
 function updateTopic(editor) {
-    post('/api/forum/update-topic', {
+    apiForumTopicUpdate({
         id: tid,
         type: editor.type.id,
         title: editor.title,
@@ -85,7 +85,7 @@ function updateTopic(editor) {
 function loadComments(page) {
     topic.comments = null
     topic.page = page
-    get(`api/forum/comments?tid=${tid}&page=${page - 1}`, data => topic.comments = data)
+    apiForumComments(tid, page - 1, data => topic.comments = data)
 }
 
 // 添加评论
@@ -96,7 +96,7 @@ function onCommentAdd() {
 
 // 删除评论
 function deleteComment(id) {
-    get(`/api/forum/delete-comment?id=${id}`, () => {
+    apiForumCommentDelete(id, () => {
         ElMessage.success('删除评论成功')
         loadComments(topic.page)
     })

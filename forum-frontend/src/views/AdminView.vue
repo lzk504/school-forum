@@ -16,13 +16,15 @@ import {
     User
 } from "@element-plus/icons-vue";
 import UserInfo from "@/components/UserInfo.vue";
-import {inject} from "vue";
+import {inject, onMounted, ref} from "vue";
+import router from "@/router";
+import {useRoute} from "vue-router";
 
 const adminMenu = [
     {
         title: '校园论坛管理', icon: Location, sub: [
-            {title: '用户管理', icon: User},
-            {title: '帖子广场管理', icon: ChatDotSquare},
+            {title: '用户管理', icon: User, index: '/admin/user'},
+            {title: '帖子广场管理', icon: ChatDotSquare, index: '/admin/forum'},
             {title: '失物招领管理', icon: Bell},
             {title: '校园活动管理', icon: Notification},
             {title: '表白墙管理', icon: Umbrella},
@@ -38,10 +40,51 @@ const adminMenu = [
         ]
     }
 ]
+const route = useRoute()
+const pageTabs = ref([])
 const loading = inject('userLoading')
 
+// 关闭标签页，但不删除最后一个
+function handleTabClose(name) {
+    const index = pageTabs.value.findIndex(tab => tab.name === name);
+    const isCurrent = name === route.fullPath
+    pageTabs.value.splice(index, 1)
+    if (pageTabs.value.length > 0) {
+        if (isCurrent) {
+            //删除后跳转到上一个标签页，默认切换到上一个标签页，如果没有上一个，则切换到下一个标签页
+            router.push(pageTabs.value[Math.max(0, index - 1)].name)
+        }
+    } else {
+        router.push('/admin')
+    }
+}
 
+// 添加标签页，但不重复添加
+function addAdminTab(menu) {
+    if (!menu.index) return
+    if (pageTabs.value.findIndex(tab => tab.name === menu.index) < 0) {
+        pageTabs.value.push({
+            title: menu.title,
+            name: menu.index
+        })
+    }
+}
 
+// 点击标签页跳转路由
+function handleTabClick({props}) {
+    router.push(props.name)
+}
+
+// 初始化页面标签页，默认选中当前路由对应的菜单项
+onMounted(() => {
+    const initPage = adminMenu
+            .flatMap(menu => menu.sub)
+            .find(sub => sub.index === route.fullPath)
+    console.log(initPage)
+    if (initPage) {
+        addAdminTab(initPage)
+    }
+})
 </script>
 
 <template>
@@ -65,7 +108,11 @@ const loading = inject('userLoading')
                                 </el-icon>
                                 <span><b>{{menu.title}}</b></span>
                             </template>
-                            <el-menu-item v-for="subMenu in menu.sub" :index="subMenu.index">
+                            <el-menu-item
+                                    v-for="subMenu in menu.sub"
+                                    :index="subMenu.index"
+                                    @click="addAdminTab(subMenu)"
+                            >
                                 <template #title>
                                     <el-icon>
                                         <component :is="subMenu.icon"/>
@@ -79,10 +126,29 @@ const loading = inject('userLoading')
             </el-aside>
             <el-container>
                 <el-header class="admin-content-header">
-                    <div style="flex: 1"></div>
+                    <div style="flex: 1">
+                        <el-tabs :model-value='route.fullPath' closable
+                                 type="card"
+                                 @tab-click="handleTabClick"
+                                 @tab-remove="handleTabClose">
+                            <el-tab-pane
+                                    v-for="tab in pageTabs"
+                                    :key="tab.name"
+                                    :label="tab.title"
+                                    :name="tab.name">
+
+                            </el-tab-pane>
+                        </el-tabs>
+                    </div>
                     <user-info/>
                 </el-header>
-                <el-main class="admin-content-main"> Main</el-main>
+                <el-main class="admin-content-main">
+                    <router-view v-slot="{ Component }">
+                        <keep-alive>
+                            <component :is="Component"/>
+                        </keep-alive>
+                    </router-view>
+                </el-main>
             </el-container>
         </el-container>
     </div>
@@ -114,6 +180,24 @@ const loading = inject('userLoading')
         display: flex;
         align-items: center;
         box-sizing: border-box;
+
+        :deep(.el-tabs__header) {
+            height: 32px;
+            margin-bottom: 0;
+            border-bottom: none;
+        }
+
+        :deep(.el-tabs__item) {
+            height: 32px;
+            padding: 0 15px;
+            border-radius: 5px;
+            border: solid 1px var(--el-border-color);
+        }
+
+        :deep(.el-tabs__nav) {
+            gap: 10px;
+            border: none;
+        }
     }
 
 }

@@ -98,3 +98,8 @@ export const apiNotificationDelete = (id, success) => {
 export const apiNotificationDeleteAll = (success) => {
     get('/api/notification/delete-all', success)
 }
+
+// 获取用户列表
+export const apiUserList = (page,size,success)=>{
+    get(`/api/admin/user/list?page=${page}&size=${size}`, success)
+}

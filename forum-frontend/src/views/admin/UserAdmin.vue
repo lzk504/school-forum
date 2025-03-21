@@ -1,6 +1,26 @@
 <script setup>
-
 import {User} from "@element-plus/icons-vue";
+import {apiUserList} from "@/net/api/user";
+import {reactive, watchEffect} from "vue";
+import {useStore} from "@/store";
+
+const store = useStore()
+
+const user = reactive({
+    page: 1,
+    size: 10,
+    total: 0,
+    data: []
+})
+
+watchEffect(() => {
+    apiUserList(user.page, user.size, data => {
+        user.total = data.total
+        user.data = data.list
+    })
+})
+
+
 </script>
 
 <template>
@@ -14,21 +34,73 @@ import {User} from "@element-plus/icons-vue";
         <div class="desc">
             这里是用户列表页面，包括账号信息、封禁和禁言处理。
         </div>
-        <el-table>
-
+        <el-table :data="user.data" height="320">
+            <el-table-column label="编号" prop="id" width="80"></el-table-column>
+            <el-table-column label="用户名">
+                <template #default="{row}">
+                    <div class="table-username">
+                        <el-avatar :size="30" :src="store.avatarUserUrl(row.avatar)"></el-avatar>
+                        <div>
+                            {{row.username}}
+                        </div>
+                    </div>
+                </template>
+            </el-table-column>
+            <el-table-column align="center" label="角色">
+                <template #default="{row}">
+                    <el-tag v-if="row.role==='admin'" type="danger">
+                        管理员
+                    </el-tag>
+                    <el-tag v-else>
+                        普通用户
+                    </el-tag>
+                </template>
+            </el-table-column>
+            <el-table-column label="邮箱" prop="email"></el-table-column>
+            <el-table-column label="注册日期">
+                <template #default="{row}">
+                    {{new Date(row.registerTime).toLocaleDateString()}}
+                </template>
+            </el-table-column>
+            <el-table-column align="center" label="编辑用户信息">
+                <el-button size="small" type="primary">修改</el-button>
+                <el-button size="small" type="danger">删除</el-button>
+            </el-table-column>
         </el-table>
+        <div class="pagination">
+            <el-pagination v-model:current-page="user.page"
+                           v-model:page-size="user.size"
+                           :total="user.total"
+                           layout="total,sizes,prev,pager,next,jumper"/>
+        </div>
+
     </div>
 </template>
 
 <style scoped>
 .user-admin {
-   .title{
-       font-weight: bold;
-   }
+    .title {
+        font-weight: bold;
+    }
+
     .desc {
-        color:#bababa;
+        color: #bababa;
         font-size: 13px;
         margin-bottom: 10px;
+    }
+
+    .table-username {
+        height: 30px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+
+    }
+
+    .pagination {
+        margin-top: 20px;
+        display: flex;
+        justify-content: right;
     }
 }
 </style>

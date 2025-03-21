@@ -80,7 +80,6 @@ onMounted(() => {
     const initPage = adminMenu
             .flatMap(menu => menu.sub)
             .find(sub => sub.index === route.fullPath)
-    console.log(initPage)
     if (initPage) {
         addAdminTab(initPage)
     }

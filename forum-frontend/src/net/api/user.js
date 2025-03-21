@@ -58,7 +58,7 @@ export const apiUserPrivacy = (success) => {
 
 // 更新隐私设置
 export const apiUserPrivacyUpdate = (data, loadingRef) => {
-    loadingRef.value = false
+    loadingRef.value = true
     post('/api/user/save-privacy', data, () => {
         ElMessage.success('修改设置成功!')
         loadingRef.value = false

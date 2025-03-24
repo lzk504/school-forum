@@ -10,7 +10,7 @@ import com.example.entity.vo.request.ModifyEmailVO;
 import com.example.entity.vo.request.PrivacySaveVO;
 import com.example.entity.vo.response.AccountDetailsVO;
 import com.example.entity.vo.response.AccountPrivacyVO;
-import com.example.entity.vo.response.AccountVo;
+import com.example.entity.vo.response.AccountVO;
 import com.example.service.AccountDetailsService;
 import com.example.service.AccountPrivacyService;
 import com.example.service.AccountService;
@@ -40,9 +40,9 @@ public class AccountController {
      * @param id 用户ID，通过@RequestAttribute注解从请求属性中获取
      */
     @GetMapping("/info")
-    public RestBean<AccountVo> info(@RequestAttribute(Const.ATTR_USER_ID) int id) {
+    public RestBean<AccountVO> info(@RequestAttribute(Const.ATTR_USER_ID) int id) {
         Account account = accountService.findAccountById(id);
-        return RestBean.success(account.asViewObject(AccountVo.class));
+        return RestBean.success(account.asViewObject(AccountVO.class));
     }
 
     /**

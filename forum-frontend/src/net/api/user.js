@@ -100,6 +100,16 @@ export const apiNotificationDeleteAll = (success) => {
 }
 
 // 获取用户列表
-export const apiUserList = (page,size,success)=>{
+export const apiUserList = (page, size, success) => {
     get(`/api/admin/user/list?page=${page}&size=${size}`, success)
+}
+
+// 获取用户详情信息
+export const apiUserDetailTotal = (id, success) => {
+    get(`/api/admin/user/detail?id=${id}`, success)
+}
+
+// 保存用户信息
+export const apiUserSave = (data,success) => {
+    post('/api/admin/user/save', data,success)
 }

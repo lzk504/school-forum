@@ -1,11 +1,13 @@
 package com.example.controller;
 
 import com.example.entity.RestBean;
+import com.example.entity.dto.Account;
 import com.example.entity.dto.Interact;
 import com.example.entity.vo.request.AddCommentVO;
 import com.example.entity.vo.request.TopicCreateVO;
 import com.example.entity.vo.request.TopicUpdateVO;
 import com.example.entity.vo.response.*;
+import com.example.service.AccountService;
 import com.example.service.TopicService;
 import com.example.service.WeatherService;
 import com.example.utils.Const;
@@ -27,6 +29,9 @@ public class ForumController {
 
     @Resource
     private TopicService topicService;
+
+    @Resource
+    private AccountService accountService;
 
     /**
      * 获取指定地理位置的天气信息
@@ -65,6 +70,10 @@ public class ForumController {
     @PostMapping("/create-topics")
     public RestBean<Void> createTopics(@Valid @RequestBody TopicCreateVO vo
             , @RequestAttribute(Const.ATTR_USER_ID) int uid) {
+        Account account = accountService.findAccountById(uid);
+        if(account.isMute()){
+            return RestBean.forbidden("您已被禁言，无法创建新的帖子");
+        }
         return RestBean.messageHandle(() -> topicService.createTopic(uid, vo));
     }
 
@@ -156,6 +165,10 @@ public class ForumController {
     @PostMapping("/add-comment")
     public RestBean<Void> addComment(@Valid @RequestBody AddCommentVO vo,
                                      @RequestAttribute(Const.ATTR_USER_ID) int uid) {
+        Account account = accountService.findAccountById(uid);
+        if(account.isMute()){
+            return RestBean.forbidden("您已被禁言，无法创建新的评论");
+        }
         return RestBean.messageHandle(() -> topicService.createComment(uid, vo));
     }
 

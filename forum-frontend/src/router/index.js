@@ -44,6 +44,10 @@ const router = createRouter({
                             component: () => import('@/views/forum/TopicDetail.vue')
                         },
                     ]
+                },{
+                    path: 'my-pomodoro',
+                    name: 'my-pomodoro',
+                    component: () => import('@/views/myUtils/MyPomodoro.vue')
                 },
                 {
                     path: 'user-setting',

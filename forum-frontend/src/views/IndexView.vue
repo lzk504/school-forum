@@ -13,11 +13,13 @@ import {
     Monitor,
     Notification,
     Operation,
+    Orange,
     Position,
     School,
     Search,
+    Tools,
     Umbrella,
-    User
+    User,
 } from "@element-plus/icons-vue";
 import router from "@/router";
 import LightCard from "@/components/LightCard.vue";
@@ -41,6 +43,10 @@ const userMenu = [
             {title: '教务通知', icon: Monitor},
             {title: '在线图书馆', icon: Collection},
             {title: '预约教室', icon: DataLine}
+        ]
+    }, {
+        title: '实用工具', icon: Tools, sub: [
+            {title: '番茄钟', icon: Orange, index: '/index/my-pomodoro'},
         ]
     }, {
         title: '个人设置', icon: Operation, sub: [

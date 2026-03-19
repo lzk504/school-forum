@@ -80,21 +80,59 @@ public class AccountAdminController {
      * @return RestBean<Void> 成功保存的响应对象
      */
     @PostMapping("/save")
-    public RestBean<Void> saveAccount(@RequestBody JSONObject object) {
+    public RestBean<Void> saveAccount(@RequestBody JSONObject object, @RequestAttribute(Const.ATTR_USER_ID) int uid) {
+
         int id = object.getInteger("id");
+        System.out.println("保存用户信息，用户ID: " + id);
+
+        if (uid == id) {
+            return RestBean.failure(400, "不能修改自己的账号信息");
+        }
+
         Account account = accountService.findAccountById(id);
+        System.out.println("找到账户: " + (account != null ? "存在" : "不存在"));
+
         Account save = object.toJavaObject(Account.class);
         this.handleBanned(account, save);
         BeanUtils.copyProperties(save, account, "password", "registerTime");
         accountService.saveOrUpdate(account);
+
         AccountDetails details = detailsService.findAccountDetailsById(id);
-        AccountDetails saveDetails = object.getJSONObject("detail").toJavaObject(AccountDetails.class);
-        BeanUtils.copyProperties(saveDetails, details);
-        detailsService.saveOrUpdate(details);
+
+        AccountDetails saveDetails = object.getJSONObject("detail") != null ?
+                object.getJSONObject("detail").toJavaObject(AccountDetails.class) : (details != null ? details : new AccountDetails());
+
+        if (details != null) {
+            details.setGender(saveDetails.getGender());
+            details.setPhone(saveDetails.getPhone());
+            details.setQq(saveDetails.getQq());
+            details.setWx(saveDetails.getWx());
+            details.setDesc(saveDetails.getDesc());
+            detailsService.saveOrUpdate(details);
+        } else {
+            // 如果记录不存在，创建新记录
+            saveDetails.setId(id);
+            detailsService.saveOrUpdate(saveDetails);
+        }
+
         AccountPrivacy privacy = privacyService.getAccountPrivacy(id);
-        AccountPrivacy savePrivacy = object.getJSONObject("privacy").toJavaObject(AccountPrivacy.class);
-        BeanUtils.copyProperties(savePrivacy, privacy);
-        privacyService.saveOrUpdate(savePrivacy);
+        AccountPrivacy savePrivacy = object.getJSONObject("privacy") != null ?
+                object.getJSONObject("privacy").toJavaObject(AccountPrivacy.class) : privacy;
+
+        // 如果有隐私设置，更新现有记录
+        if (savePrivacy != null) {
+            privacy.setPhone(savePrivacy.isPhone());
+            privacy.setEmail(savePrivacy.isEmail());
+            privacy.setQq(savePrivacy.isQq());
+            privacy.setWx(savePrivacy.isWx());
+            privacy.setGender(savePrivacy.isGender());
+            privacyService.saveOrUpdate(privacy);
+            System.out.println("更新隐私设置完成");
+        } else {
+            privacyService.saveOrUpdate(privacy);
+            System.out.println("保存默认隐私设置完成");
+        }
+
         return RestBean.success();
     }
 

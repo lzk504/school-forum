@@ -55,4 +55,5 @@ spring:
     username: adminminio
     password: adminminio
   weather:
+    api-host: 'mp2vhd8rm3.re.qweatherapi.com'
     key: 8eac088c9da54f55b7d857f362cd2b9d

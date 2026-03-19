@@ -110,6 +110,6 @@ export const apiUserDetailTotal = (id, success) => {
 }
 
 // 保存用户信息
-export const apiUserSave = (data,success) => {
-    post('/api/admin/user/save', data,success)
+export const apiUserSave = (data, success, failure) => {
+    post('/api/admin/user/save', data, success, failure)
 }

@@ -1,18 +1,13 @@
 <script setup>
 import {EditPen, User} from "@element-plus/icons-vue";
-import {apiUserDetailTotal, apiUserList, apiUserSave} from "@/net/api/user";
-import {reactive, watchEffect} from "vue";
+import {apiUserList} from "@/net/api/user";
+import {reactive, ref, watchEffect} from "vue";
 import {useStore} from "@/store";
-import {ElMessage} from "element-plus";
+import UserEditor from "@/components/UserEditor.vue";
 
 const store = useStore()
 
-const editor = reactive({
-    id: 0,
-    display: false,
-    temp: {},
-    loading: false,
-})
+const editorRef = ref()
 
 const user = reactive({
     page: 1,
@@ -33,35 +28,20 @@ function userState(user) {
     }
 }
 
-// 打开用户编辑器
-function openUserEditor(user) {
-    editor.id = user.id;
-    editor.display = true;
-    editor.loading = true;
-    apiUserDetailTotal(editor.id, data => {
-        editor.temp = {...data, ...user};
-        editor.loading = false;
-    })
-
-
-}
-
-// 保存用户详情
-function saveUserDetail() {
-    editor.display = false;
-    apiUserSave(editor.temp, () => {
-        const result = user.data.find(item => item.id === editor.id)
-        Object.assign(result, editor.temp)
-        ElMessage.success("保存成功")
-    })
-}
-
 watchEffect(() => {
     apiUserList(user.page, user.size, data => {
         user.total = data.total
         user.data = data.list
     })
 })
+
+
+// 打开用户编辑器
+function openUserEditor(row) {
+    if (editorRef.value) {
+        editorRef.value.openUserEditor(row)
+    }
+}
 
 
 </script>
@@ -124,53 +104,7 @@ watchEffect(() => {
                            :total="user.total"
                            layout="total,sizes,prev,pager,next,jumper"/>
         </div>
-        <el-drawer v-model="editor.display">
-            <template #header>
-                <div>
-                    <div style="font-weight: bold">
-                        <div>
-                            <el-icon>
-                                <EditPen/>
-                            </el-icon>
-                            编辑用户信息
-                        </div>
-                        <div style="font-size: 13px;color: gray">编辑完成后请点击下方保存按钮</div>
-
-                    </div>
-                </div>
-            </template>
-            <el-form>
-                <el-form-item label="用户名">
-                    <el-input v-model="editor.temp.username"></el-input>
-                </el-form-item>
-                <el-form-item label="电子邮件">
-                    <el-input v-model="editor.temp.email"></el-input>
-                </el-form-item>
-                <div style="display: flex;font-size: 14px;gap: 20px">
-                    <div>
-                        <span style="margin-right: 10px">禁言</span>
-                        <el-switch v-model="editor.temp.mute"/>
-                    </div>
-                    <el-divider direction="vertical" style="height: 30px"></el-divider>
-                    <div>
-                        <span style="margin-right: 10px">封禁</span>
-                        <el-switch v-model="editor.temp.banned"/>
-                    </div>
-                </div>
-                <div style="margin-top: 10px;color: #606266;font-size: 14px">
-                    注册时间{{new Date(editor.temp.registerTime).toLocaleDateString()}}
-                </div>
-            </el-form>
-            <template #footer>
-                <div>
-                    <div style="text-align: center">
-                        <el-button type="success" @click="saveUserDetail">保存</el-button>
-                        <el-button type="info" @click="editor.display=false">取消</el-button>
-                    </div>
-                </div>
-            </template>
-
-        </el-drawer>
+        <user-editor ref="editorRef" :user="user"/>
     </div>
 </template>
 

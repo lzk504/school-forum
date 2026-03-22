@@ -136,6 +136,17 @@ public class AccountAdminController {
         return RestBean.success();
     }
 
+    @PostMapping("/change-password")
+    public RestBean<Void> changePassword(@RequestBody JSONObject jsonObject, @RequestAttribute(Const.ATTR_USER_ID) int uid){
+        int id = jsonObject.getInteger("id");
+        String newPassword = jsonObject.getString("newPassword");
+        if (id == uid) {
+            return RestBean.failure(400, "不能修改自己的密码");
+        }
+        accountService.modifyPassword(id, newPassword);
+        return RestBean.success();
+    }
+
     /**
      * 处理被禁用的账户
      *

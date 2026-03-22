@@ -31,4 +31,6 @@ public interface AccountService extends IService<Account>, UserDetailsService {
      * 修改密码
      */
     String changePassword(int id, ChangePasswordVO vo);
+
+    void modifyPassword(int id,String newPassword);
 }

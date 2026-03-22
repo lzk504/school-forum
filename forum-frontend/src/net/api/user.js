@@ -113,3 +113,7 @@ export const apiUserDetailTotal = (id, success) => {
 export const apiUserSave = (data, success, failure) => {
     post('/api/admin/user/save', data, success, failure)
 }
+//修改用户密码
+export const apiUserModifyPassword = (data, success) => {
+    post('/api/admin/user/change-password', data, success)
+}

@@ -13,6 +13,7 @@ import java.util.Date;
 @Accessors(chain = true)
 @TableName("db_email_record")
 public class EmailRecord {
+
     @TableId
     Integer id;
 

@@ -1,5 +1,7 @@
 package com.example.service.impl;
 
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.entity.dto.EmailRecord;
 import com.example.mapper.EmailRecordMapper;
 import com.example.service.EmailService;
@@ -33,5 +35,22 @@ public class EmailServiceImpl implements EmailService {
         recordMapper.insert(emailRecord);
         rabbitTemplate.convertAndSend(Const.MQ_MAIL, emailRecord);
 
+    }
+
+    @Override
+    public Page<EmailRecord> listEmailRecord(int page, int size) {
+        return recordMapper.selectPage(Page.of(page,size,true),Wrappers.emptyWrapper());
+    }
+
+    @Override
+    public boolean resendEmailRecord(int id) {
+        EmailRecord emailRecord = recordMapper.selectById(id);
+        if (emailRecord == null) {
+            return false;
+        }
+        emailRecord.setStatus(0);
+        rabbitTemplate.convertAndSend(Const.MQ_MAIL, emailRecord);
+        recordMapper.updateById(emailRecord);
+        return true;
     }
 }

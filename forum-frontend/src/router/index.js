@@ -77,6 +77,10 @@ const router = createRouter({
                     path: 'forum',
                     name: 'admin-forum',
                     component: () => import('@/views/admin/ForumAdmin.vue')
+                },{
+                    path: 'email',
+                    name: 'admin-email',
+                    component:()=>import('@/views/admin/EmailAdmin.vue')
                 }
             ]
         }

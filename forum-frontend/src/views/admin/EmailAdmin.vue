@@ -51,22 +51,22 @@ watchEffect(() => {
         </div>
         <el-table :data="emailList.list" height="400">
             <el-table-column align="center" label="ID" prop="id" width="100"/>
-            <el-table-column align="center" label="收件人" prop="email" show-overflow-tooltip width="200"/>
-            <el-table-column label="发送状态" prop="status" width="100">
+            <el-table-column align="center" label="收件人" prop="email" show-overflow-tooltip />
+            <el-table-column align="center" label="发送状态" prop="status">
                 <template #default="{row}">
                     <el-tag v-if="row.status === 0" type="info">发送中</el-tag>
                     <el-tag v-if="row.status === 1" type="success">已发送</el-tag>
                     <el-tag v-if="row.status === 2" type="danger">发送失败</el-tag>
                 </template>
             </el-table-column>
-            <el-table-column align="center" label="邮件主题" prop="title" show-overflow-tooltip width="200"/>
-            <el-table-column align="center" label="邮件内容" prop="content" show-overflow-tooltip width="300"/>
-            <el-table-column label="发送时间" prop="time" width="200">
+            <el-table-column align="center" label="邮件主题" prop="title" show-overflow-tooltip />
+            <el-table-column align="center" label="邮件内容" prop="content" show-overflow-tooltip />
+            <el-table-column align="center" label="发送时间" prop="time" >
                 <template #default="{row}">
-                    {{new Date(row.time.toLocaleString())}}
+                    {{new Date(row.time).toLocaleDateString()}}
                 </template>
             </el-table-column>
-            <el-table-column fixed="right" width="120">
+            <el-table-column align="center" fixed="right" label="操作">
                 <template #default="{row}">
                     <el-button :disabled="row.status!==2" :icon="RefreshLeft"
                                size="small"
@@ -88,7 +88,7 @@ watchEffect(() => {
     </div>
 </template>
 
-<style scoped>
+<style lang="less" scoped>
 .email-admin {
     .title {
         font-weight: bold;

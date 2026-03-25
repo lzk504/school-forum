@@ -1,5 +1,6 @@
 package com.example.service;
 
+import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.example.entity.dto.Interact;
 import com.example.entity.dto.Topic;
@@ -23,12 +24,15 @@ public interface TopicService extends IService<Topic> {
 
     /**
      * 创建一个新帖子。
-     *
-     * @param uid 用户ID
-     * @param vo  话题创建视图对象，包含话题标题、内容等信息
-     * @return 创建成功返回话题ID的字符串表示，失败则返回null
+
      */
     String createTopic(int uid, TopicCreateVO vo);
+
+    /**
+     * 查询所有帖子管理员
+     */
+
+    JSONObject listAllTopicByPage(int page,int size);
 
     /**
      * 按页获取话题列表

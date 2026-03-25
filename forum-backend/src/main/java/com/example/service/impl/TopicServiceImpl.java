@@ -120,6 +120,25 @@ public class TopicServiceImpl extends ServiceImpl<TopicMapper, Topic> implements
     }
 
     /**
+     * 获取全部帖子列表
+     * @param page 页码
+     * @param size
+     * @return 对象集合
+     */
+    @Override
+    public JSONObject listAllTopicByPage(int page, int size) {
+        Page<Topic> topicPage = baseMapper
+                .selectPage(Page.of(page, size, true), Wrappers.<Topic>query()
+                        .select("id", "title", "uid","type", "time", "top")
+                        .orderByDesc("time"));
+        List<TopicPreviewVO> list = topicPage.getRecords().stream().map(this::resolveToPreview).toList();
+        JSONObject obj = new JSONObject();
+        obj.put("total", topicPage.getTotal());
+        obj.put("list", list);
+        return obj;
+    }
+
+    /**
      * 校验并更新帖子信息
      */
     @Override
@@ -226,7 +245,7 @@ public class TopicServiceImpl extends ServiceImpl<TopicMapper, Topic> implements
 
     /**
      * 按页获取话题列表
-     * <p>
+     *
      * 根据给定的页码和话题类型，从数据库中查询对应的话题列表，并转换为TopicPreviewVO对象列表返回。
      *
      * @param pageNumber 页码，从0开始
@@ -247,7 +266,7 @@ public class TopicServiceImpl extends ServiceImpl<TopicMapper, Topic> implements
                     .eq("type", type).orderByDesc("time"));
         List<Topic> topics = page.getRecords();
         if (topics.isEmpty()) return null;
-        list = topics.stream().map(this::resolveTopicPreview).toList();
+        list = topics.stream().map(this::resolveToPreview).toList();
         cacheUtils.saveCacheList(key, list, 60);
         return list;
     }
@@ -411,7 +430,7 @@ public class TopicServiceImpl extends ServiceImpl<TopicMapper, Topic> implements
      * @param topic Topic对象
      * @return 转换后的TopicPreviewVO对象
      */
-    private TopicPreviewVO resolveTopicPreview(Topic topic) {
+    private TopicPreviewVO resolveToPreview(Topic topic) {
         TopicPreviewVO vo = new TopicPreviewVO();
         BeanUtils.copyProperties(accountMapper.selectById(topic.getUid()), vo);
         BeanUtils.copyProperties(topic, vo);
@@ -419,8 +438,10 @@ public class TopicServiceImpl extends ServiceImpl<TopicMapper, Topic> implements
         vo.setCollect(baseMapper.interactCount(topic.getId(), "collect"));
         List<String> images = new ArrayList<>();
         StringBuilder previewText = new StringBuilder();
-        JSONArray ops = JSONObject.parseObject(topic.getContent()).getJSONArray("ops");
-        this.shortContent(ops, previewText, obj -> images.add(obj.toString()));
+        if (topic.getContent() != null) {
+            JSONArray ops = JSONObject.parseObject(topic.getContent()).getJSONArray("ops");
+            this.shortContent(ops, previewText, obj -> images.add(obj.toString()));
+        }
         vo.setText(previewText.length() > 300 ? previewText.substring(0, 300) : previewText.toString());
         vo.setImages(images);
         return vo;

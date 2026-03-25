@@ -69,3 +69,8 @@ export const apiForumCommentDelete = (id, success) => {
 export const apiForumCommentAdd = (data, success) => {
     post('/api/forum/add-comment', data, success)
 }
+
+//获取全部帖子管理员
+export const apiForumTopicAllList = (page,size,success) => {
+    get(`/api/admin/forum/list?page=${page}&size=${size}`, success)
+}

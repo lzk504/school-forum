@@ -1,6 +1,12 @@
 <script setup>
 import {reactive, ref, watchEffect} from "vue";
-import {apiForumTopicAllList, apiForumTopicDelete, apiForumTopicTop, apiForumTypeList} from "@/net/api/forum";
+import {
+    apiForumTopicAllList,
+    apiForumTopicDelete,
+    apiForumTopicLocked,
+    apiForumTopicTop,
+    apiForumTypeList
+} from "@/net/api/forum";
 import {useStore} from "@/store";
 import {ElMessage, ElMessageBox} from "element-plus";
 
@@ -32,11 +38,17 @@ const deleteTopic = row => {
 }
 
 const setTopTopic = (tid, status) => {
-    apiForumTopicTop({tid,status},data=>{
+    apiForumTopicTop({tid, status}, data => {
         ElMessage.success("帖子置顶状态修改成功")
         refreshList()
     })
+}
 
+const setTopicLocked = (tid, status) => {
+    apiForumTopicLocked({tid, status}, data => {
+        ElMessage.success("帖子锁定状态修改成功")
+        refreshList()
+    })
 }
 
 const refreshList = () => {
@@ -96,10 +108,15 @@ apiForumTypeList(data => {
             <el-table-column align="center" fixed="right" label="操作">
                 <template #default="{row}">
                     <el-button plain size="small" type="info">屏蔽</el-button>
-                    <el-button plain size="small" type="primary">锁定</el-button>
+                    <el-button plain size="small" type="primary" v-if="row.locked" @click="setTopicLocked(row.id,false)">
+                        解锁
+                    </el-button>
+                    <el-button plain size="small" type="success" v-else @click="setTopicLocked(row.id,true)">锁定
+                    </el-button>
                     <el-button v-if="row.top" plain size="small" type="warning" @click="setTopTopic(row.id,false)">取消
                     </el-button>
-                    <el-button v-else plain size="small" type="success" @click="setTopTopic(row.id,true)">置顶</el-button>
+                    <el-button v-else plain size="small" type="success" @click="setTopTopic(row.id,true)">置顶
+                    </el-button>
                     <el-button plain size="small" type="danger" @click="deleteTopic(row)">删除</el-button>
                 </template>
             </el-table-column>

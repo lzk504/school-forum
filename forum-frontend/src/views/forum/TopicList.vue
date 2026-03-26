@@ -178,6 +178,13 @@ onMounted(() => {
                                 </div>
                             </div>
                             <div style="margin-top: 7px">
+                                <el-tag v-if="item.locked" style="margin-right: 6px" size="small" effect="dark"
+                                        type="warning" disable-transitions>
+                                    <el-icon>
+                                        <Lock/>
+                                    </el-icon>
+                                    已锁定
+                                </el-tag>
                                 <topic-tag :type="item.type"/>
                                 <span style="font-weight: bold;margin-left: 7px">{{item.title}}</span>
                             </div>

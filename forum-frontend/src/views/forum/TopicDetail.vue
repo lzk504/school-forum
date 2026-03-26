@@ -111,6 +111,12 @@ function deleteComment(id) {
                            @click="router.push('/index')">返回列表
                 </el-button>
                 <div style="text-align: center;flex: 1">
+                    <el-tag v-if="topic.data.locked" size="small" effect="dark" type="warning" disable-transitions>
+                        <el-icon>
+                            <Lock/>
+                        </el-icon>
+                        已锁定
+                    </el-tag>
                     <topic-tag :type="topic.data.type"/>
                     <span style="font-weight: bold;margin-left: 10px">{{topic.data.title}}</span>
                 </div>
@@ -155,6 +161,7 @@ function deleteComment(id) {
                     <div style="text-align: right;margin-top: 30px">
                         <interact-button name="编辑帖子" color="dodgerblue" :check="false"
                                          @check="edit = true" style="margin-right: 20px"
+                                         :disabled="topic.data.locked"
                                          v-if="store.user.id === topic.data.user.id"
                         >
                             <el-icon>

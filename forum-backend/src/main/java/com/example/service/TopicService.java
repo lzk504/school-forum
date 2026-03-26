@@ -91,6 +91,11 @@ public interface TopicService extends IService<Topic> {
     /**
      * 设置帖子置顶
      */
-    void setTopicTop(int id, boolean state);
+    void setTopicTop(int id, boolean status);
+
+    /**
+     * 设置帖子锁定
+     */
+    void setTopicLocked(int id, boolean status);
 }
 

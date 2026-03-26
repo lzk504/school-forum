@@ -111,6 +111,8 @@ public class TopicServiceImpl extends ServiceImpl<TopicMapper, Topic> implements
         topic.setContent(vo.getContent().toJSONString());
         topic.setUid(uid);
         topic.setTime(new Date());
+        topic.setTop(0);
+        topic.setLocked(0);
         if (this.save(topic)) {
             cacheUtils.deleteCachePattern(Const.FORUM_TOPIC_PREVIEW_CACHE + "*");
             return null;
@@ -129,7 +131,7 @@ public class TopicServiceImpl extends ServiceImpl<TopicMapper, Topic> implements
     public JSONObject listAllTopicByPage(int page, int size) {
         Page<Topic> topicPage = baseMapper
                 .selectPage(Page.of(page, size, true), Wrappers.<Topic>query()
-                        .select("id", "title", "uid", "type", "time", "top")
+                        .select("id", "title", "uid", "type", "time", "top", "locked")
                         .orderByDesc("time"));
         List<TopicPreviewVO> list = topicPage.getRecords().stream().map(this::resolveToPreview).toList();
         JSONObject obj = new JSONObject();
@@ -147,14 +149,15 @@ public class TopicServiceImpl extends ServiceImpl<TopicMapper, Topic> implements
             return "文本长度超过限制";
         if (!types.contains(vo.getType()))
             return "话题类型不存在";
-        baseMapper.update(null, Wrappers.<Topic>update()
+        int result = baseMapper.update(null, Wrappers.<Topic>update()
                 .eq("uid", uid)
                 .eq("id", vo.getId())
+                .eq("locked", 0)
                 .set("title", vo.getTitle())
                 .set("content", vo.getContent().toString())
                 .set("type", vo.getType())
         );
-        return null;
+        return result > 0  ? null : "帖子已被锁定，无法进行修改";
     }
 
 
@@ -251,10 +254,17 @@ public class TopicServiceImpl extends ServiceImpl<TopicMapper, Topic> implements
     }
 
     @Override
-    public void setTopicTop(int id, boolean state) {
+    public void setTopicTop(int id, boolean status) {
         baseMapper.update(null, Wrappers.<Topic>update()
                 .eq("id", id)
-                .set("top", state));
+                .set("top", status));
+    }
+
+    @Override
+    public void setTopicLocked(int id, boolean status) {
+        baseMapper.update(null, Wrappers.<Topic>update()
+                .eq("id", id)
+                .set("locked", status));
     }
 
     /**

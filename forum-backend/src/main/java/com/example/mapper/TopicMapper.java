@@ -80,6 +80,15 @@ public interface TopicMapper extends BaseMapper<Topic> {
             where db_topic_interact_collect.uid = #{uid}
             """)
     List<Topic> collectTopics(int uid);
+
+    /**
+     * 删除收藏的帖子
+     * @param tid 帖子id
+     */
+    @Select("""
+            delete from db_topic_interact_collect where tid = #{tid}
+            """)
+   void deleteCollectTopics(int tid);
 }
 
 

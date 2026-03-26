@@ -18,4 +18,5 @@ public class Topic implements BaseData {
     Integer type;
     Date time;
     Integer uid;
+    Integer top;
 }

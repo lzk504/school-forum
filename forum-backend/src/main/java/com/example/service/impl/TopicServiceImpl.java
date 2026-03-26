@@ -121,15 +121,15 @@ public class TopicServiceImpl extends ServiceImpl<TopicMapper, Topic> implements
 
     /**
      * 获取全部帖子列表
+     *
      * @param page 页码
-     * @param size
      * @return 对象集合
      */
     @Override
     public JSONObject listAllTopicByPage(int page, int size) {
         Page<Topic> topicPage = baseMapper
                 .selectPage(Page.of(page, size, true), Wrappers.<Topic>query()
-                        .select("id", "title", "uid","type", "time", "top")
+                        .select("id", "title", "uid", "type", "time", "top")
                         .orderByDesc("time"));
         List<TopicPreviewVO> list = topicPage.getRecords().stream().map(this::resolveToPreview).toList();
         JSONObject obj = new JSONObject();
@@ -243,9 +243,23 @@ public class TopicServiceImpl extends ServiceImpl<TopicMapper, Topic> implements
         commentMapper.delete(Wrappers.<TopicComment>query().eq("id", id).eq("uid", uid));
     }
 
+    @Override
+    public void deleteTopic(int id) {
+        baseMapper.deleteById(id);
+        cacheUtils.deleteCachePattern(Const.FORUM_TOPIC_PREVIEW_CACHE + "*");
+        baseMapper.deleteCollectTopics(id);
+    }
+
+    @Override
+    public void setTopicTop(int id, boolean state) {
+        baseMapper.update(null, Wrappers.<Topic>update()
+                .eq("id", id)
+                .set("top", state));
+    }
+
     /**
      * 按页获取话题列表
-     *
+     * <p>
      * 根据给定的页码和话题类型，从数据库中查询对应的话题列表，并转换为TopicPreviewVO对象列表返回。
      *
      * @param pageNumber 页码，从0开始

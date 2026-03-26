@@ -71,6 +71,16 @@ export const apiForumCommentAdd = (data, success) => {
 }
 
 //获取全部帖子管理员
-export const apiForumTopicAllList = (page,size,success) => {
+export const apiForumTopicAllList = (page, size, success) => {
     get(`/api/admin/forum/list?page=${page}&size=${size}`, success)
+}
+
+//删除帖子管理员
+export const apiForumTopicDelete = (tid, success, failure) => {
+    get(`/api/admin/forum/delete?tid=${tid}`, success, failure)
+}
+
+//置顶帖子管理员
+export const apiForumTopicTop = (data, success, failure) => {
+    post('/api/admin/forum/top', data, success, failure)
 }

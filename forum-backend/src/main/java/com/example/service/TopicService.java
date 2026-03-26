@@ -82,5 +82,15 @@ public interface TopicService extends IService<Topic> {
      * 删除指定话题的指定用户的评论
      */
     void deleteComment(int id, int uid);
+
+    /**
+     * 删除帖子
+     */
+    void deleteTopic(int id);
+
+    /**
+     * 设置帖子置顶
+     */
+    void setTopicTop(int id, boolean state);
 }
 

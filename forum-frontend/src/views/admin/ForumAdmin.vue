@@ -1,7 +1,8 @@
 <script setup>
 import {reactive, ref, watchEffect} from "vue";
-import {apiForumTopicAllList, apiForumTypeList} from "@/net/api/forum";
+import {apiForumTopicAllList, apiForumTopicDelete, apiForumTopicTop, apiForumTypeList} from "@/net/api/forum";
 import {useStore} from "@/store";
+import {ElMessage, ElMessageBox} from "element-plus";
 
 const store = useStore()
 const topicList = reactive({
@@ -14,12 +15,41 @@ const topicList = reactive({
 const types = ref([])
 const findType = (type) => types.value.find(item => item.id === type)
 
-watchEffect(() => {
+const deleteTopic = row => {
+    const {id, username} = row;
+    ElMessageBox.confirm(`您确定要删除${username},的帖子吗？`, "删除帖子", {
+        callback: value => {
+            if (value === 'confirm') {
+                apiForumTopicDelete(id, () => {
+                    refreshList()
+                    ElMessage.success("删除成功")
+                }, () => {
+                    ElMessage.error("删除失败")
+                })
+            }
+        }
+    })
+}
+
+const setTopTopic = (tid, status) => {
+    apiForumTopicTop({tid,status},data=>{
+        ElMessage.success("帖子置顶状态修改成功")
+        refreshList()
+    })
+
+}
+
+const refreshList = () => {
     apiForumTopicAllList(topicList.page, topicList.size, data => {
         topicList.list = data.list;
         topicList.total = data.total;
     })
+}
+
+watchEffect(() => {
+    refreshList()
 })
+
 
 apiForumTypeList(data => {
     types.value = data;
@@ -40,8 +70,8 @@ apiForumTypeList(data => {
         <el-table :data="topicList.list" height="400">
             <el-table-column align="center" label="帖子ID" prop="id" width="100"/>
             <el-table-column align="center" label="帖子标题" prop="title" show-overflow-tooltip/>
-            <el-table-column label="帖子类型" >
-                <template #default="{row}" >
+            <el-table-column label="帖子类型">
+                <template #default="{row}">
                     <div class="topic-type">
                         <div :style="{backgroundColor:findType(row.type)?.color ?? '#bababa'}" class="type-dot"></div>
                         <div>{{findType(row.type)?.name ?? '未知类型'}}</div>
@@ -65,9 +95,12 @@ apiForumTypeList(data => {
             </el-table-column>
             <el-table-column align="center" fixed="right" label="操作">
                 <template #default="{row}">
-                    <el-button size="small" type="info">屏蔽</el-button>
-                    <el-button size="small" type="primary">锁定</el-button>
-                    <el-button size="small" type="danger">删除</el-button>
+                    <el-button plain size="small" type="info">屏蔽</el-button>
+                    <el-button plain size="small" type="primary">锁定</el-button>
+                    <el-button v-if="row.top" plain size="small" type="warning" @click="setTopTopic(row.id,false)">取消
+                    </el-button>
+                    <el-button v-else plain size="small" type="success" @click="setTopTopic(row.id,true)">置顶</el-button>
+                    <el-button plain size="small" type="danger" @click="deleteTopic(row)">删除</el-button>
                 </template>
             </el-table-column>
 

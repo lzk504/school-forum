@@ -16,6 +16,7 @@ public class TopicDetailVO {
     Interact interact;
     Long comments;
     Integer locked;
+    Integer invisible;
 
     @Data
     public static class User {

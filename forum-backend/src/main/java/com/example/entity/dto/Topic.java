@@ -20,4 +20,5 @@ public class Topic implements BaseData {
     Integer uid;
     Integer top;
     Integer locked;
+    Integer invisible;
 }

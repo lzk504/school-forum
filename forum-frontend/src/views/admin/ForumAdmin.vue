@@ -3,6 +3,7 @@ import {reactive, ref, watchEffect} from "vue";
 import {
     apiForumTopicAllList,
     apiForumTopicDelete,
+    apiForumTopicInvisible,
     apiForumTopicLocked,
     apiForumTopicTop,
     apiForumTypeList
@@ -47,6 +48,13 @@ const setTopTopic = (tid, status) => {
 const setTopicLocked = (tid, status) => {
     apiForumTopicLocked({tid, status}, data => {
         ElMessage.success("帖子锁定状态修改成功")
+        refreshList()
+    })
+}
+
+const setTopicInvisible = (tid, status) => {
+    apiForumTopicInvisible({tid, status}, data => {
+        ElMessage.success("帖子屏蔽状态修改成功")
         refreshList()
     })
 }
@@ -107,8 +115,13 @@ apiForumTypeList(data => {
             </el-table-column>
             <el-table-column align="center" fixed="right" label="操作">
                 <template #default="{row}">
-                    <el-button plain size="small" type="info">屏蔽</el-button>
-                    <el-button plain size="small" type="primary" v-if="row.locked" @click="setTopicLocked(row.id,false)">
+                    <el-button v-if="row.invisible" plain size="small" type="danger"
+                               @click="setTopicInvisible(row.id,false)" >已屏蔽
+                    </el-button>
+                    <el-button v-else plain size="small" type="info" @click="setTopicInvisible(row.id,true)">屏蔽
+                    </el-button>
+                    <el-button v-if="row.locked" plain size="small" type="primary"
+                               @click="setTopicLocked(row.id,false)">
                         解锁
                     </el-button>
                     <el-button plain size="small" type="success" v-else @click="setTopicLocked(row.id,true)">锁定

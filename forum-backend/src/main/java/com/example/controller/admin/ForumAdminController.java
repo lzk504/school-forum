@@ -47,4 +47,13 @@ public class ForumAdminController {
         );
         return RestBean.success();
     }
+
+    @PostMapping("/invisible")
+    public RestBean<Void> setInvisible(@RequestBody JSONObject object) {
+        topicService.setTopicInvisible(
+                object.getIntValue("tid"),
+                object.getBooleanValue("status")
+        );
+        return RestBean.success();
+    }
 }

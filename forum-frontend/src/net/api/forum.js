@@ -89,3 +89,8 @@ export const apiForumTopicTop = (data, success, failure) => {
 export const apiForumTopicLocked = (data, success, failure) => {
     post('/api/admin/forum/locked', data, success, failure)
 }
+
+//屏蔽帖子管理员
+export const apiForumTopicInvisible = (data, success, failure) => {
+    post('/api/admin/forum/invisible', data, success, failure)
+}
